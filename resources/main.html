@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>AnnotationTool</title>
+    <script src="js/annotation.js"></script>
+    <link rel="stylesheet" href="css/photon.css">
+
+    <style>
+        html, body {
+            background-color: #DADADA;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #main {
+            width: 100%;
+            height: 100%;
+        }
+
+        .no-scroll {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .auto-scroll-v {
+            overflow-y: auto;
+            height: 100%;
+        }
+    </style>
+    <style>
+        ul, #tree {
+            list-style-type: none;
+        }
+
+        #tree {
+            margin: 0;
+            padding: 0;
+        }
+
+        .caret {
+            cursor: pointer;
+            user-select: none
+        }
+
+        .caret::before {
+            content: "\25B6";
+            color: black;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .caret-down::before {
+            transform: rotate(90deg);
+        }
+
+        .nested {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+<div class="window">
+    <header class="toolbar toolbar-header">
+        <div class="toolbar-actions">
+            <div class="btn-group">
+                <button class="btn btn-default" onclick="open_annotation();">
+                    <span class="icon icon-folder"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <div class="window-content">
+        <div class="pane-group">
+            <div class="pane-sm sidebar" id="side">
+                <ul id="tree" class="auto-scroll-v">
+                </ul>
+            </div>
+            <div class="pane no-scroll">
+                <canvas id="main"></canvas>
+            </div>
+        </div>
+    </div>
+    <footer class="toolbar toolbar-footer">
+    </footer>
+</div>
+<script>
+    const canvas = document.querySelector('#main');
+    const offset = 100
+    const layout = {
+        'front_center_forward_60': function (width, height) {
+            return [0, -(height + offset)]
+        },
+        'front_center_forward_100': function (width, height) {
+            return [0, 0]
+        },
+        'front_left_backward_100': function (width, height) {
+            return [-(width + offset), +(height + offset)]
+        },
+        'front_left_forward_100': function (width, height) {
+            return [-(width + offset), 0]
+        },
+        'front_right_backward_100': function (width, height) {
+            return [width + offset, +(height + offset)]
+        },
+        'front_right_forward_100': function (width, height) {
+            return [width + offset, 0]
+        }
+    }
+
+    const application = new Application(canvas, layout)
+
+    function create_scene_tree(scene, frames) {
+        const nested = document.createElement('ul')
+        nested.className = 'nested'
+        for (const frame in frames) {
+            const frame_li = document.createElement('li')
+            frame_li.innerHTML = frame
+            frame_li.addEventListener('click', () => {
+                application.newFrame(frames[frame])
+            })
+            nested.appendChild(frame_li)
+        }
+
+        const span = document.createElement('span')
+        span.className = 'caret'
+        span.innerHTML = scene
+        span.addEventListener("click", function () {
+            nested.classList.toggle("active");
+            span.classList.toggle("caret-down");
+        });
+
+        const scene_li = document.createElement('li')
+        scene_li.appendChild(span)
+        scene_li.appendChild(nested)
+
+        return scene_li
+    }
+
+    function reset_tree(mvProject) {
+        const tree = document.querySelector('#tree')
+        tree.innerHTML = ''
+
+        for (const scene in mvProject.scenes) {
+            const scene_tree = create_scene_tree(scene, mvProject.scenes[scene])
+            tree.appendChild(scene_tree)
+        }
+
+        application.newFrame()
+    }
+
+    function fnOpenDirectory(_, files) {
+        reset_tree(new MvProject(files))
+    }
+
+    const {ipcRenderer} = require('electron');
+    ipcRenderer.on('open-directory', fnOpenDirectory);
+
+    function open_annotation() {
+        ipcRenderer.send('open-directory');
+    }
+</script>
+
+</body>
+</html>

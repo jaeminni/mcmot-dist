@@ -3,7 +3,8 @@ import Editor from './Editor'
 import * as THREE from 'three'
 
 export default class Application {
-    constructor(canvas, layout) {
+    constructor(canvas, labels, layout) {
+        this.labels = labels
         this.layout = layout
         const editor = new Editor()
         this.editor = editor
@@ -13,50 +14,21 @@ export default class Application {
         const imageController = new ImageController(camera, canvas)
         editor.start()
 
-        const scenes = []
-        this.scenes = scenes
-        let hovered, selected
-
         imageController.hover = (raycaster) => {
-            for (const mesh of scenes) {
-                const hover = mesh.raycast(raycaster)
-                if (hover) {
-                    if (hovered) {
-                        hovered.hover(false)
-                    }
-                    hovered = hover.object
-                    hovered.hover(true)
-                    return
-                }
-            }
-            if (hovered) {
-                hovered.hover(false)
-                hovered = undefined
+            const mvObject = editor.scene_raycast('back', raycaster)
+            if (mvObject) {
             }
         }
 
-        imageController.selecting = (raycaster) => {
-            for (const scene of scenes) {
-                const selecting = scene.raycast(raycaster)
-                if (selecting) {
-                    if (selected) {
-                        selected.selecting(false)
-                    }
-                    selected = selecting.object
-                    selected.selecting(true)
-                    return
-                }
-            }
-            if (selected) {
-                selected.selecting(false)
-                selected = undefined
+        imageController.select = (raycaster, event) => {
+            const mvObject = editor.scene_raycast('back', raycaster)
+            if (mvObject) {
             }
         }
     }
 
     newFrame = (mvFrame) => {
         this.editor.clear_scene('back')
-        // this.scenes.length = 0
         if (!mvFrame) {
             return
         }
@@ -70,12 +42,11 @@ export default class Application {
             loader.load(image_path, (texture) => {
                 const width = texture.image.naturalWidth;
                 const height = texture.image.naturalHeight;
-                const offset = layout[position](width, height)
+                const offset = this.layout && this.layout[position](width, height)
 
                 fetch(json_path).then(res => res.json()).then(data => {
                     const mv_scene = new MvScene(texture, data, offset)
                     this.editor.scene_addObject('back', mv_scene);
-                    // this.scenes.push(mv_scene)
                 })
             })
         }

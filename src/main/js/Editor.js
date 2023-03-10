@@ -21,6 +21,8 @@ export default class Editor {
         }
 
         group.clear()
+
+        scene.labels.length = 0
     }
 
     create_scene(key, parameters = {}) {
@@ -38,6 +40,8 @@ export default class Editor {
         scene.add(group)
         scene.group = group
 
+        scene.labels = []
+
         return this.scenes[key] = scene
     }
 
@@ -48,12 +52,10 @@ export default class Editor {
             for (const mvScene of group.children) {
                 const intersect = mvScene.raycast(raycaster)
                 if (intersect) {
-                    return {scene: mvScene, object: intersect.object}
+                    return intersect.object
                 }
             }
         }
-
-        return {}
     }
 
     scene_addObject(key, object) {

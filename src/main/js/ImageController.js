@@ -79,7 +79,7 @@ export default class ImageController {
         return true
     }
 
-    selecting // (event, offset)
+    select // (event, offset)
     hover
 
     pan = (event) => {
@@ -116,9 +116,9 @@ export default class ImageController {
 
         switch (this.state) {
             case STATE.MOVE:
-                if (this.selecting) {
+                if (this.select) {
                     this.updateRaycaster(event)
-                    this.selecting(this.raycaster, event)
+                    this.select(this.raycaster, event)
                 }
         }
 
@@ -138,10 +138,6 @@ export default class ImageController {
         this.updateRaycaster(event);
         this.target_pointer.copy(this.raycaster.ray.direction)
             .multiplyScalar(Math.abs(this.camera.position.z) * this.ZOOM_SCALE_SPEED * direction)
-
-        // this.updateTargetPointer(event)
-        // this.target_pointer.sub(this.camera.position).normalize()
-        //     .multiplyScalar(Math.abs(this.camera.position.z) * this.ZOOM_SCALE_SPEED * direction)
         this.addCameraPosition(this.target_pointer)
     }
 

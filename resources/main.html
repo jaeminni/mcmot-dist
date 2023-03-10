@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>AnnotationTool</title>
@@ -18,6 +18,13 @@
         }
 
         #main {
+            width: 100%;
+            height: 100%;
+        }
+
+        #main-labels {
+            position: absolute;
+            top: 0;
             width: 100%;
             height: 100%;
         }
@@ -87,6 +94,7 @@
             </div>
             <div class="pane no-scroll">
                 <canvas id="main"></canvas>
+                <div id="main-labels"></div>
             </div>
         </div>
     </div>
@@ -95,6 +103,7 @@
 </div>
 <script>
     const canvas = document.querySelector('#main');
+    const labels = document.querySelector('#main-labels');
     const offset = 100
     const layout = {
         'front_center_forward_60': function (width, height) {
@@ -117,7 +126,7 @@
         }
     }
 
-    const application = new Application(canvas, layout)
+    const application = new Application(canvas, labels, layout)
 
     function create_scene_tree(scene, frames) {
         const nested = document.createElement('ul')
@@ -168,6 +177,7 @@
     function open_annotation() {
         ipcRenderer.send('open-directory');
     }
+
 </script>
 
 </body>

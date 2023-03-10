@@ -21,7 +21,7 @@ function getFiles(file_path, files, ext) {
 
 ipcMain.on('open-directory', (event) => {
     dialog.showOpenDialog({properties: ['openDirectory']}).then(arg => {
-        if(!arg.canceled) {
+        if (!arg.canceled) {
             const files = []
             getFiles(arg.filePaths[0], files, /(json|jpg|png)$/i);
             event.reply('open-directory', files);

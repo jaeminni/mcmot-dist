@@ -8,7 +8,7 @@ const STATE = {
     ZOOM: 2,
 }
 
-export default class ImageController {
+export default class ImageControls {
     constructor(camera, canvas) {
         this.camera = camera
         this.canvas = canvas

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>AnnotationTool</title>
+    <script src="js/annotation.js"></script>
+    <link rel="stylesheet" href="css/photon.css">
+
+    <style>
+        html, body {
+            background-color: #DADADA;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #main {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .no-scroll {
+            overflow: hidden;
+        }
+
+        .no-show {
+            display: none;
+        }
+
+        .auto-scroll-v {
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .labels {
+            position: absolute;
+            z-index: 0;
+            left: 0;
+            top: 0;
+            color: white;
+        }
+
+        .labels > div {
+            white-space: nowrap;
+            position: absolute;
+            left: 0;
+            top: 0;
+            cursor: pointer;
+            font-size: small;
+            text-shadow: -1px -1px 0 #000,
+            0 -1px 0 #000,
+            1px -1px 0 #000,
+            1px 0 0 #000,
+            1px 1px 0 #000,
+            0 1px 0 #000,
+            -1px 1px 0 #000,
+            -1px 0 0 #000;
+        }
+
+        .objects {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 200px;
+            max-height: 650px;
+            overflow-y: auto;
+        }
+
+        .properties {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            max-height: 650px;
+            overflow-y: auto;
+        }
+    </style>
+    <style>
+        ul, #tree {
+            list-style-type: none;
+        }
+
+        #tree {
+            margin: 0;
+            padding: 0;
+        }
+
+        .caret {
+            cursor: pointer;
+            user-select: none
+        }
+
+        .caret::before {
+            content: "\25B6";
+            color: black;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .caret-down::before {
+            transform: rotate(90deg);
+        }
+
+        .nested {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .selected {
+            background-color: #3e9bf4;
+        }
+
+        .object_hover {
+            border: 1px solid blue;
+        }
+    </style>
+</head>
+
+<body>
+<div class="window">
+    <header class="toolbar toolbar-header">
+        <div class="toolbar-actions">
+            <div class="btn-group">
+                <button class="btn btn-default" onclick="request_open_project();">
+                    <span class="icon icon-folder"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <div class="window-content">
+        <div class="pane-group">
+            <div class="pane-sm sidebar" id="side">
+                <ul id="tree" class="auto-scroll-v">
+                </ul>
+            </div>
+            <div class="pane no-scroll">
+                <canvas id="main"></canvas>
+                <div class="labels"></div>
+                <div class="objects"></div>
+                <div class="properties"></div>
+            </div>
+        </div>
+    </div>
+    <footer class="toolbar toolbar-footer">
+    </footer>
+</div>
+<script>
+    class WebController extends MvController {
+        application
+        scene_component
+        object_component
+        properties_component
+
+        constructor(application, scene_component, object_component, properties_component) {
+            super();
+            this.application = application
+            application.controllers.push(this)
+            this.scene_component = scene_component
+            this.object_component = object_component
+            this.properties_component = properties_component
+        }
+
+        create_frame_cell = (frame) => {
+            const frame_li = document.createElement('li')
+            frame_li.innerHTML = frame.name
+            frame_li.addEventListener('click', () => {
+                this.application.select_frame(frame)
+            })
+
+            frame.cell = frame_li
+
+            return frame_li
+        }
+
+        create_scene_cell = (scene) => {
+            const span = document.createElement('span')
+            span.className = 'caret'
+            span.innerHTML = scene.name
+
+            const nested = document.createElement('ul')
+            nested.className = 'nested'
+
+            span.addEventListener("click", function () {
+                nested.classList.toggle("active");
+                span.classList.toggle("caret-down");
+            });
+
+            const scene_li = document.createElement('li')
+            scene_li.appendChild(span)
+            scene_li.appendChild(nested)
+
+            for (const frame in scene.frames) {
+                nested.appendChild(this.create_frame_cell(scene.frames[frame]))
+            }
+
+            scene.cell = scene_li
+
+            return scene_li
+        }
+
+        new_project = (project) => {
+            for (const scene in project.scenes) {
+                this.scene_component.appendChild(
+                    this.create_scene_cell(project.scenes[scene])
+                )
+            }
+        }
+
+        dispose_project = (project) => {
+            this.scene_component.innerHTML = ''
+            for (const scene in project.scenes) {
+                for (const frame in project.scenes[scene].frames) {
+                    project.scenes[scene].frames[frame].cell = undefined
+                }
+                project.scenes[scene].cell = undefined
+            }
+        }
+
+        select_frame = (frame) => {
+            frame.cell.classList.add('selected')
+            for (const camera in frame.cameras) {
+                const camera_div = document.createElement('div')
+                camera_div.classList.add('nested')
+                frame.cameras[camera].cell = camera_div
+                frame.cameras[camera].objects.forEach(object => {
+                    const object_div = document.createElement('div')
+                    object.cell = object_div
+                    object_div.classList.add('object')
+                    object_div.textContent = object.properties['type']
+                    object_div.addEventListener('click', () => {
+                        this.application.select_camera(frame.cameras[camera])
+                        this.application.select_object(object)
+                    })
+                    object_div.addEventListener('mouseover', () => {
+                        this.application.hover_object(object)
+                    })
+                    camera_div.appendChild(object_div)
+                })
+                this.object_component.appendChild(camera_div)
+            }
+        }
+        deselect_frame = (frame) => {
+            frame.cell.classList.remove('selected')
+            for (const camera in frame.cameras) {
+                frame.cameras[camera].objects.forEach(object => {
+                    object.cell = undefined
+                })
+                frame.cameras[camera].cell = undefined
+            }
+            this.object_component.innerHTML = ''
+            this.properties_component.innerHTML = ''
+        }
+        hover_object = (object) => {
+            if (object && object.cell) {
+                object.cell.classList.add('object_hover')
+            }
+        }
+        dehover_object = (object) => {
+            if (object && object.cell) {
+                object.cell.classList.remove('object_hover')
+            }
+        }
+        select_camera = (camera) => {
+            if (camera && camera.cell) {
+                camera.cell.classList.add('active')
+            }
+        }
+        deselect_camera = (camera) => {
+            if (camera && camera.cell) {
+                camera.cell.classList.remove('active')
+            }
+        }
+        select_object = (object) => {
+            if (object && object.cell) {
+                object.cell.classList.add('selected')
+
+                const table = document.createElement('table')
+                this.properties_component.appendChild(table)
+
+                for (const key in object.properties) {
+                    const tr = document.createElement('tr')
+                    table.appendChild(tr)
+                    {
+                        const td = document.createElement('td')
+                        td.textContent = key
+                        tr.appendChild(td)
+                    }
+                    {
+                        const td = document.createElement('td')
+                        const input = document.createElement('input')
+                        input.type = 'text'
+                        input.value = object.properties[key]
+                        td.appendChild(input)
+                        tr.appendChild(td)
+                    }
+                }
+            }
+        }
+        deselect_object = (object) => {
+            if (object && object.cell) {
+                object.cell.classList.remove('selected')
+            }
+            this.properties_component.innerHTML = ''
+        }
+    }
+
+    const application = new MvApplication()
+
+    const tree = document.querySelector('#tree')
+    const objects = document.querySelector('.objects')
+    const properties = document.querySelector('.properties')
+    const web_controller = new WebController(application, tree, objects, properties)
+
+    const canvas = document.querySelector('#main')
+    const labels = document.querySelector('.labels')
+    const gl_controller = new GLController(application, canvas, labels)
+
+    function response_open_project(_, files) {
+        const project = new MvProject(files)
+        application.new_project(project)
+    }
+
+    const {ipcRenderer} = require('electron');
+    ipcRenderer.on('open-directory', response_open_project);
+
+    function request_open_project() {
+        ipcRenderer.send('open-directory');
+    }
+</script>
+
+</body>
+</html>

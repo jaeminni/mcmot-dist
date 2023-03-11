@@ -297,6 +297,9 @@
                         const input = document.createElement('input')
                         input.type = 'text'
                         input.value = object.properties[key]
+                        input.addEventListener('change', () => {
+                            object.properties[key] = input.value
+                        })
                         td.appendChild(input)
                         tr.appendChild(td)
                     }

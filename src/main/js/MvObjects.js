@@ -30,7 +30,7 @@ class MvObject {
     constructor(parent, data) {
         this.data = data
 
-        const properties = {}
+        const properties = {'track_id': null}
         Object.assign(properties, data)
 
         this.faces = properties['geometry']

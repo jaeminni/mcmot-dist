@@ -146,6 +146,9 @@
                 <button class="btn btn-default" onclick="request_open_project();">
                     <span class="icon icon-folder"></span>
                 </button>
+                <button class="btn btn-default" onclick="request_save_project();">
+                    <span class="icon icon-floppy"></span>
+                </button>
             </div>
         </div>
     </header>
@@ -184,8 +187,12 @@
     const web_controller = new WebController(application, tree, objects, properties)
 
     function response_open_project(_, files) {
-        const project = new MvProject(files)
-        application.new_project(project)
+        (async () => {
+            application.new_project()
+        })().then(() => {
+            const project = new MvProject(files)
+            application.new_project(project)
+        })
     }
 
     const {ipcRenderer} = require('electron');
@@ -194,6 +201,14 @@
     function request_open_project() {
         ipcRenderer.send('open-directory');
     }
+
+    function request_save_project() {
+        application.save()
+    }
+
+    document.addEventListener('save-camera', event => {
+        ipcRenderer.send('save-camera', event.detail);
+    });
 </script>
 
 </body>

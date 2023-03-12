@@ -107,6 +107,19 @@ export default class GLController extends MvController {
 
     dispose_project = (project) => {
         this.project = undefined
+        for (const scene in project.scenes) {
+            for (const _frame in project.scenes[scene]) {
+                const frame = project.scenes[scene][_frame]
+                for (const camera in frame.cameras) {
+                    frame.cameras[camera].dispose(this.gl_group, this.labels, this.update)
+                }
+            }
+        }
+        this.labels.innerHTML = ''
+        this.frame = undefined
+        this.controls.hover = undefined
+        this.controls.select = undefined
+        this.update()
     }
 
     hover = (raycaster) => {
@@ -139,6 +152,9 @@ export default class GLController extends MvController {
     }
 
     select_frame = (frame) => {
+        if (!frame) {
+            return
+        }
         for (const camera in frame.cameras) {
             frame.cameras[camera].create_mesh(this.gl_group, this.labels, this.update)
         }
@@ -148,6 +164,9 @@ export default class GLController extends MvController {
         this.update()
     }
     deselect_frame = (frame) => {
+        if (!frame) {
+            return
+        }
         for (const camera in frame.cameras) {
             frame.cameras[camera].dispose(this.gl_group, this.labels, this.update)
         }

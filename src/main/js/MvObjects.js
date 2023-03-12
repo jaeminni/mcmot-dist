@@ -32,6 +32,7 @@ class MvObject {
         this.data = data
         const track_id = data[MvOptions.id_name] || null
 
+        data[MvOptions.id_name] = track_id
         const properties = {}
         properties[MvOptions.id_name] = track_id
         Object.assign(properties, data)
@@ -43,6 +44,25 @@ class MvObject {
         delete properties['wheels']
 
         this.properties = properties
+    }
+
+    toObject = () => {
+        const object = {}
+        object['geometry'] = this.faces
+        object['wheels'] = this.wheels
+
+        Object.assign(object, this.properties)
+
+        return object
+    }
+
+    isPropertyChanged = () => {
+        for (const key in this.properties) {
+            if (this.data[key] !== this.properties[key]) {
+                return true
+            }
+        }
+        return false
     }
 
     mesh
@@ -136,12 +156,12 @@ class MvObject {
 }
 
 class MvCamera {
-    constructor(parent, name, image_path, json_path) {
+    constructor(parent, name, path) {
         this.parent = parent
         this.name = name
 
-        this.image_path = image_path
-        this.json_path = json_path
+        this.image_path = path.image
+        this.json_path = path.json
 
         this.objects = []
         fetch(this.json_path).then(res => res.json()).then(data => {
@@ -154,6 +174,39 @@ class MvCamera {
         this.layout = MvOptions.layout[name] || (() => {
             return [0, 0]
         })
+    }
+
+    internal_save() {
+        const file = {
+            filename: this.filename,
+            objects: this.objects.map(object => object.toObject())
+        }
+
+        document.dispatchEvent(new CustomEvent('save-camera', {
+            cancelable: true,
+            detail: {
+                path: this.json_path,
+                json: JSON.stringify(file, null, 4)
+            }
+        }));
+    }
+
+    save = (forced) => {
+        if (forced) {
+            this.internal_save()
+        } else {
+            let needSave = false
+            for (const object of this.objects) {
+                if (object.isPropertyChanged()) {
+                    needSave = true
+                    break
+                }
+            }
+
+            if (needSave) {
+                this.internal_save()
+            }
+        }
     }
 
     mesh
@@ -221,8 +274,14 @@ class MvFrame {
         this.parent = parent
         this.name = name
         this.cameras = {}
-        for (const camera_name in cameras) {
-            this.cameras[camera_name] = new MvCamera(this, camera_name, cameras[camera_name].image, cameras[camera_name].json)
+        for (const camera in cameras) {
+            this.cameras[camera] = new MvCamera(this, camera, cameras[camera])
+        }
+    }
+
+    save = (forced) => {
+        for (const camera in this.cameras) {
+            this.cameras[camera].save(forced)
         }
     }
 
@@ -234,8 +293,14 @@ class MvScene {
         this.parent = parent
         this.name = name;
         this.frames = {}
-        for (const frame_name in frames) {
-            this.frames[frame_name] = new MvFrame(this, frame_name, frames[frame_name])
+        for (const frame in frames) {
+            this.frames[frame] = new MvFrame(this, frame, frames[frame])
+        }
+    }
+
+    save = (forced) => {
+        for (const frame in this.frames) {
+            this.frames[frame].save(forced)
         }
     }
 }
@@ -264,6 +329,12 @@ class MvProject {
         this.scenes = {}
         for (const scene_name in scenes) {
             this.scenes[scene_name] = new MvScene(this, scene_name, scenes[scene_name])
+        }
+    }
+
+    save = (forced) => {
+        for (const scene_name in this.scenes) {
+            this.scenes[scene_name].save(forced)
         }
     }
 }

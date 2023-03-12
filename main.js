@@ -29,6 +29,14 @@ ipcMain.on('open-directory', (event) => {
     })
 });
 
+ipcMain.on('save-camera', (event, arg) => {
+    console.log(arg)
+    const path = arg.path
+    const json = arg.json
+
+    fs.writeFileSync(path, json)
+});
+
 const createWindow = () => {
     const mainWindow = new BrowserWindow({
         width: 1600, height: 1200, webPreferences: {

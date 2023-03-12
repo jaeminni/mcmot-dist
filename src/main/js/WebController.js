@@ -54,6 +54,9 @@ export default class WebController extends MvController {
     }
 
     new_project = (project) => {
+        if(!project) {
+            return
+        }
         for (const scene in project.scenes) {
             this.scene_component.appendChild(
                 this.create_scene_cell(project.scenes[scene])
@@ -62,16 +65,22 @@ export default class WebController extends MvController {
     }
 
     dispose_project = (project) => {
+        if(!project) {
+            return
+        }
         this.scene_component.innerHTML = ''
         for (const scene in project.scenes) {
             for (const frame in project.scenes[scene].frames) {
-                project.scenes[scene].frames[frame].cell = undefined
+                this.application.deselect_frame(project.scenes[scene].frames[frame])
             }
             project.scenes[scene].cell = undefined
         }
     }
 
     select_frame = (frame) => {
+        if(!frame) {
+            return
+        }
         frame.cell.classList.add('selected')
         for (const camera in frame.cameras) {
             const camera_div = document.createElement('div')
@@ -101,6 +110,9 @@ export default class WebController extends MvController {
         document.title = `${frame.parent.name}-${frame.name}`
     }
     deselect_frame = (frame) => {
+        if(!frame) {
+            return
+        }
         frame.cell.classList.remove('selected')
         for (const camera in frame.cameras) {
             frame.cameras[camera].objects.forEach(object => {
@@ -156,7 +168,7 @@ export default class WebController extends MvController {
                 input.type = 'text'
                 input.value = object.properties[key]
                 input.addEventListener('change', () => {
-                    this.properties[key] = input.value
+                    object.properties[key] = input.value
                 })
                 td.appendChild(input)
                 tr.appendChild(td)

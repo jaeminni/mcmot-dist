@@ -35,13 +35,17 @@ class MvApplication extends MvController {
 
     new_project = (project) => {
         this.project && this.dispose_project(this.project)
-        this.controllers.forEach(controller => controller.new_project(project))
-        this.project = project
+        if (project) {
+            this.controllers.forEach(controller => controller.new_project(project))
+            this.project = project
+        }
     }
 
     dispose_project = (project) => {
-        this.controllers.forEach(controller => controller.dispose_project(project))
-        this.project = undefined
+        if (project) {
+            this.controllers.forEach(controller => controller.dispose_project(project))
+            this.project = undefined
+        }
     }
 
     select_frame = (frame) => {
@@ -96,6 +100,12 @@ class MvApplication extends MvController {
 
     update = () => {
         this.controllers.forEach(controller => controller.update())
+    }
+
+    save = (forced) => {
+        if (this.project) {
+            this.project.save(forced)
+        }
     }
 }
 

@@ -24,14 +24,16 @@ class MvOptions {
     static emissive = 0x000000
     static select = 0xff0000
     static hover = 0x00f000
+    static id_name = 'track_id'
 }
 
 class MvObject {
     constructor(parent, data) {
         this.data = data
-        data['track_id'] || (data['track_id'] = null)
+        const track_id = data[MvOptions.id_name] || null
 
         const properties = {}
+        properties[MvOptions.id_name] = track_id
         Object.assign(properties, data)
 
         this.faces = properties['geometry']

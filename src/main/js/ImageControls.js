@@ -82,9 +82,12 @@ export default class ImageControls {
     select // (event, offset)
     hover
 
+    update
+
     pan = (event) => {
         this.calOffset(event)
         this.addCameraPosition(this.target_pointer.multiplyScalar(-1))
+        this.update && this.update()
     }
 
     calOffset = (event) => {
@@ -139,6 +142,8 @@ export default class ImageControls {
         this.target_pointer.copy(this.raycaster.ray.direction)
             .multiplyScalar(Math.abs(this.camera.position.z) * this.ZOOM_SCALE_SPEED * direction)
         this.addCameraPosition(this.target_pointer)
+
+        this.update && this.update()
     }
 
     addCameraPosition = (diff) => {

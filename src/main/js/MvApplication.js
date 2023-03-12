@@ -20,6 +20,8 @@ class MvController {
     }
     deselect_object = (object) => {
     }
+    update = () => {
+    }
 }
 
 class MvApplication extends MvController {
@@ -90,6 +92,10 @@ class MvApplication extends MvController {
     deselect_object = (object) => {
         this.controllers.forEach(controller => controller.deselect_object(object))
         this.selected_object = undefined
+    }
+
+    update = () => {
+        this.controllers.forEach(controller => controller.update())
     }
 }
 

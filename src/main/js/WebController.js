@@ -77,6 +77,11 @@ export default class WebController extends MvController {
             const camera_div = document.createElement('div')
             camera_div.classList.add('nested', 'list')
             frame.cameras[camera].cell = camera_div
+            const title = document.createElement('div')
+            title.classList.add('title')
+            title.textContent = frame.cameras[camera].name
+            camera_div.appendChild(title)
+
             frame.cameras[camera].objects.forEach(object => {
                 const object_div = document.createElement('div')
                 object.cell = object_div
@@ -93,6 +98,7 @@ export default class WebController extends MvController {
             })
             this.object_component.appendChild(camera_div)
         }
+        document.title = `${frame.parent.name}-${frame.name}`
     }
     deselect_frame = (frame) => {
         frame.cell.classList.remove('selected')
@@ -129,6 +135,11 @@ export default class WebController extends MvController {
         if (object && object.cell) {
             object.cell.classList.add('selected')
 
+            const title = document.createElement('div')
+            title.classList.add('title')
+            title.textContent = 'properties'
+            this.properties_component.appendChild(title)
+
             const table = document.createElement('table')
             table.classList.add('list')
             this.properties_component.appendChild(table)
@@ -136,22 +147,19 @@ export default class WebController extends MvController {
             for (const key in object.properties) {
                 const tr = document.createElement('tr')
                 table.appendChild(tr)
-                {
-                    const td = document.createElement('td')
-                    td.textContent = key
-                    tr.appendChild(td)
-                }
-                {
-                    const td = document.createElement('td')
-                    const input = document.createElement('input')
-                    input.type = 'text'
-                    input.value = object.properties[key]
-                    input.addEventListener('change', () => {
-                        object.properties[key] = input.value
-                    })
-                    td.appendChild(input)
-                    tr.appendChild(td)
-                }
+                const label = document.createElement('td')
+                label.textContent = key
+                tr.appendChild(label)
+
+                const td = document.createElement('td')
+                const input = document.createElement('input')
+                input.type = 'text'
+                input.value = object.properties[key]
+                input.addEventListener('change', () => {
+                    this.properties[key] = input.value
+                })
+                td.appendChild(input)
+                tr.appendChild(td)
             }
         }
     }

@@ -94,6 +94,12 @@
         }
 
         .object {
+            padding-left: 5px;
+        }
+
+        .title {
+            color: white;
+            background-color: #737475;
         }
     </style>
     <style>
@@ -163,6 +169,10 @@
 <script>
 
     const application = new MvApplication()
+
+    window.onresize = () => {
+        application.update()
+    }
 
     const canvas = document.querySelector('#main')
     const labels = document.querySelector('.labels')

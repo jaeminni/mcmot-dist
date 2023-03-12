@@ -29,8 +29,9 @@ class MvOptions {
 class MvObject {
     constructor(parent, data) {
         this.data = data
+        data['track_id'] || (data['track_id'] = null)
 
-        const properties = {'track_id': null}
+        const properties = {}
         Object.assign(properties, data)
 
         this.faces = properties['geometry']
@@ -156,7 +157,7 @@ class MvCamera {
     mesh
     cell
 
-    create_mesh = (gl_container, web_container) => {
+    create_mesh = (gl_container, web_container, callback) => {
         const texture_loader = new THREE.TextureLoader()
         texture_loader.load(this.image_path, (texture) => {
             const width = texture.image.naturalWidth
@@ -174,10 +175,11 @@ class MvCamera {
             gl_container.add(this.mesh)
 
             this.objects.forEach(object => object.create_mesh(this.mesh, web_container))
+            callback && callback()
         })
     }
 
-    dispose = (gl_container, web_container) => {
+    dispose = (gl_container, web_container, callback) => {
         this.objects.forEach(object => object.dispose(this.mesh, web_container))
 
         if (this.mesh) {
@@ -188,6 +190,7 @@ class MvCamera {
         }
 
         this.cell = undefined
+        callback && callback()
     }
 
     raycast = (raycaster) => {

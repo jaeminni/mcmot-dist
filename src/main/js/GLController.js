@@ -27,9 +27,10 @@ export default class GLController extends MvController {
         this.create_camera()
 
         this.controls = new ImageControls(this.camera, canvas)
+        this.controls.update = this.render
         this.texture_loader = new THREE.TextureLoader()
 
-        this.start()
+        // this.start()
     }
 
     create_camera = (fov = 60, near = 0.1, far = 50000) => {
@@ -87,13 +88,17 @@ export default class GLController extends MvController {
 
     rendering = false
 
-    start() {
-        this.rendering = true
-        requestAnimationFrame(this.render)
+    start = () => {
+        // this.rendering = true
+        // requestAnimationFrame(this.render)
     }
 
-    stop() {
-        this.rendering = false
+    stop = () => {
+        // this.rendering = false
+    }
+
+    update = () => {
+        requestAnimationFrame(this.render)
     }
 
     new_project = (project) => {
@@ -134,33 +139,34 @@ export default class GLController extends MvController {
     }
 
     select_frame = (frame) => {
-        this.stop()
         for (const camera in frame.cameras) {
-            frame.cameras[camera].create_mesh(this.gl_group, this.labels)
+            frame.cameras[camera].create_mesh(this.gl_group, this.labels, this.update)
         }
         this.frame = frame
         this.controls.hover = this.hover
         this.controls.select = this.select
-        this.start()
-
+        this.update()
     }
     deselect_frame = (frame) => {
         for (const camera in frame.cameras) {
-            frame.cameras[camera].dispose(this.gl_group, this.labels)
+            frame.cameras[camera].dispose(this.gl_group, this.labels, this.update)
         }
         this.labels.innerHTML = ''
         this.frame = undefined
         this.controls.hover = undefined
         this.controls.select = undefined
+        this.update()
     }
     hover_object = (object) => {
         if (object) {
             object.hover()
+            this.update()
         }
     }
     dehover_object = (object) => {
         if (object) {
             object.dehover()
+            this.update()
         }
     }
     select_camera = (camera) => {
@@ -170,11 +176,13 @@ export default class GLController extends MvController {
     select_object = (object) => {
         if (object) {
             object.select()
+            this.update()
         }
     }
     deselect_object = (object) => {
         if (object) {
             object.deselect()
+            this.update()
         }
     }
 }

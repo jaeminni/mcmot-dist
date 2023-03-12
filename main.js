@@ -36,7 +36,7 @@ const createWindow = () => {
         }
     })
 
-    const html = 'resources/main2.html';
+    const html = 'resources/main.html';
 
     mainWindow.loadFile(html).then();
 }

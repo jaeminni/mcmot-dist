@@ -27,6 +27,10 @@
             overflow: hidden;
         }
 
+        .no-show {
+            display: none;
+        }
+
         .auto-scroll-v {
             overflow-y: auto;
             height: 100%;
@@ -55,6 +59,47 @@
             0 1px 0 #000,
             -1px 1px 0 #000,
             -1px 0 0 #000;
+        }
+
+        .objects {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 200px;
+            max-height: 650px;
+            overflow-y: auto;
+            background-color: floralwhite;
+        }
+
+        .properties {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            max-height: 650px;
+            overflow-y: auto;
+            background-color: aliceblue;
+        }
+
+        .selected {
+            background-color: #3e9bf4;
+        }
+
+        .object_hover {
+            border: 1px solid blue;
+        }
+
+        .list {
+            padding: 5px;
+        }
+
+        .object {
+            padding-left: 5px;
+        }
+
+        .title {
+            color: white;
+            background-color: #737475;
         }
     </style>
     <style>
@@ -98,7 +143,7 @@
     <header class="toolbar toolbar-header">
         <div class="toolbar-actions">
             <div class="btn-group">
-                <button class="btn btn-default" onclick="open_annotation();">
+                <button class="btn btn-default" onclick="request_open_project();">
                     <span class="icon icon-folder"></span>
                 </button>
             </div>
@@ -113,6 +158,8 @@
             <div class="pane no-scroll">
                 <canvas id="main"></canvas>
                 <div class="labels"></div>
+                <div class="objects"></div>
+                <div class="properties"></div>
             </div>
         </div>
     </div>
@@ -120,82 +167,33 @@
     </footer>
 </div>
 <script>
-    const canvas = document.querySelector('#main');
-    const labels = document.querySelector('.labels');
-    const offset = 100
-    const layout = {
-        'front_center_forward_60': function (width, height) {
-            return [0, -(height + offset)]
-        },
-        'front_center_forward_100': function (width, height) {
-            return [0, 0]
-        },
-        'front_left_backward_100': function (width, height) {
-            return [-(width + offset), +(height + offset)]
-        },
-        'front_left_forward_100': function (width, height) {
-            return [-(width + offset), 0]
-        },
-        'front_right_backward_100': function (width, height) {
-            return [width + offset, +(height + offset)]
-        },
-        'front_right_forward_100': function (width, height) {
-            return [width + offset, 0]
-        }
+
+    const application = new MvApplication()
+
+    window.onresize = () => {
+        application.update()
     }
 
-    const application = new Application(canvas, labels, layout)
+    const canvas = document.querySelector('#main')
+    const labels = document.querySelector('.labels')
+    const gl_controller = new GLController(application, canvas, labels)
 
-    function create_scene_tree(scene, frames) {
-        const nested = document.createElement('ul')
-        nested.className = 'nested'
-        for (const frame in frames) {
-            const frame_li = document.createElement('li')
-            frame_li.innerHTML = frame
-            frame_li.addEventListener('click', () => {
-                application.newFrame(frames[frame])
-            })
-            nested.appendChild(frame_li)
-        }
+    const tree = document.querySelector('#tree')
+    const objects = document.querySelector('.objects')
+    const properties = document.querySelector('.properties')
+    const web_controller = new WebController(application, tree, objects, properties)
 
-        const span = document.createElement('span')
-        span.className = 'caret'
-        span.innerHTML = scene
-        span.addEventListener("click", function () {
-            nested.classList.toggle("active");
-            span.classList.toggle("caret-down");
-        });
-
-        const scene_li = document.createElement('li')
-        scene_li.appendChild(span)
-        scene_li.appendChild(nested)
-
-        return scene_li
-    }
-
-    function reset_tree(mvProject) {
-        const tree = document.querySelector('#tree')
-        tree.innerHTML = ''
-
-        for (const scene in mvProject.scenes) {
-            const scene_tree = create_scene_tree(scene, mvProject.scenes[scene])
-            tree.appendChild(scene_tree)
-        }
-
-        application.newFrame()
-    }
-
-    function fnOpenDirectory(_, files) {
-        reset_tree(new MvProject(files))
+    function response_open_project(_, files) {
+        const project = new MvProject(files)
+        application.new_project(project)
     }
 
     const {ipcRenderer} = require('electron');
-    ipcRenderer.on('open-directory', fnOpenDirectory);
+    ipcRenderer.on('open-directory', response_open_project);
 
-    function open_annotation() {
+    function request_open_project() {
         ipcRenderer.send('open-directory');
     }
-
 </script>
 
 </body>

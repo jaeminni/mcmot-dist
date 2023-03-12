@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "annotation": "webpack --mode production --config webpack.config.js"
+    "annotation": "webpack --mode development --config webpack.config.js",
+    "annotation_pro": "webpack --mode production --config webpack.config.js"
   },
   "browser": {
     "path": false,

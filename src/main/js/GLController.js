@@ -27,34 +27,6 @@ export default class GLController extends MvController {
         this.create_camera()
 
         this.controls = new ImageControls(this.camera, canvas)
-        this.controls.hover = (raycaster) => {
-            if (this.frame) {
-                for (const _camera in this.frame.cameras) {
-                    const {camera, object} = this.frame.cameras[_camera].raycast(raycaster)
-
-                    if (camera || object) {
-                        this.application.hover_object(object)
-                        return
-                    }
-                }
-                this.application.hover_object()
-            }
-        }
-
-        this.controls.select = (raycaster) => {
-            if (this.frame) {
-                for (const _camera in this.frame.cameras) {
-                    const {camera, object} = this.frame.cameras[_camera].raycast(raycaster)
-                    if (camera || object) {
-                        this.application.select_camera(camera)
-                        this.application.select_object(object)
-                        return
-                    }
-                }
-                this.application.select_camera()
-                this.application.select_object()
-            }
-        }
         this.texture_loader = new THREE.TextureLoader()
 
         this.start()
@@ -132,11 +104,45 @@ export default class GLController extends MvController {
         this.project = undefined
     }
 
+    hover = (raycaster) => {
+        if (this.frame) {
+            for (const _camera in this.frame.cameras) {
+                const {camera, object} = this.frame.cameras[_camera].raycast(raycaster)
+
+                if (camera || object) {
+                    this.application.hover_object(object)
+                    return
+                }
+            }
+            this.application.hover_object()
+        }
+    }
+
+    select = (raycaster) => {
+        if (this.frame) {
+            for (const _camera in this.frame.cameras) {
+                const {camera, object} = this.frame.cameras[_camera].raycast(raycaster)
+                if (camera || object) {
+                    this.application.select_camera(camera)
+                    this.application.select_object(object)
+                    return
+                }
+            }
+            this.application.select_camera()
+            this.application.select_object()
+        }
+    }
+
     select_frame = (frame) => {
-        this.frame = frame
+        this.stop()
         for (const camera in frame.cameras) {
             frame.cameras[camera].create_mesh(this.gl_group, this.labels)
         }
+        this.frame = frame
+        this.controls.hover = this.hover
+        this.controls.select = this.select
+        this.start()
+
     }
     deselect_frame = (frame) => {
         for (const camera in frame.cameras) {
@@ -144,6 +150,8 @@ export default class GLController extends MvController {
         }
         this.labels.innerHTML = ''
         this.frame = undefined
+        this.controls.hover = undefined
+        this.controls.select = undefined
     }
     hover_object = (object) => {
         if (object) {

@@ -2,15 +2,13 @@ import {MvController} from "./MvApplication"
 import {MvOptions} from "./MvObjects";
 
 export default class WebController extends MvController {
-    application
     scene_component
     object_component
     properties_component
 
     constructor(application, scene_component, object_component, properties_component) {
-        super();
-        this.application = application
-        application.controllers.push(this)
+        super(application);
+
         this.scene_component = scene_component
         this.object_component = object_component
         this.properties_component = properties_component

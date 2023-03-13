@@ -1,4 +1,13 @@
 class MvController {
+    application
+
+    constructor(application) {
+        if (application) {
+            this.application = application
+            application.controllers.push(this)
+        }
+    }
+
     new_project = (project) => {
     }
     dispose_project = (project) => {
@@ -7,7 +16,6 @@ class MvController {
     }
     deselect_frame = (frame) => {
     }
-
     hover_object = (object) => {
     }
     dehover_object = (object) => {

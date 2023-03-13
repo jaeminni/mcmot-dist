@@ -152,7 +152,7 @@
             </div>
         </div>
     </header>
-    <div class="window-content">
+    <div class="window-content" tabindex="0">
         <div class="pane-group">
             <div class="pane-sm sidebar" id="side">
                 <ul id="tree" class="auto-scroll-v">
@@ -208,6 +208,14 @@
 
     document.addEventListener('save-camera', event => {
         ipcRenderer.send('save-camera', event.detail);
+    });
+
+    let keyMap;
+    const keyFile = "js/key.json";
+    fetch(keyFile).then(r => r.text()).then(t => {
+        keyMap = JSON.parse(t)
+        const keyComponent = document.querySelector(".window-content");
+        new KeyController(application, keyComponent, keyMap)
     });
 </script>
 

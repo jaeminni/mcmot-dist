@@ -1,0 +1,14 @@
+{
+  "FirstImage": "Home",
+  "LastImage": "End",
+  "NextImage": "KeyS",
+  "PrevImage": "KeyA",
+  "NextObject": "KeyW",
+  "PrevObject": "KeyQ",
+  "AllHide": "KeyH",
+  "Check": "Space",
+  "Fit": "KeyB",
+  "Formatted": "KeyV",
+  "ColorSetting": "KeyC",
+  "VisibleSetting": "KeyG"
+}

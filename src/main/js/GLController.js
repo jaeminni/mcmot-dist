@@ -3,12 +3,8 @@ import ImageControls from "./ImageControls";
 import * as THREE from "three";
 
 export default class GLController extends MvController {
-    application
-
     constructor(application, canvas, labels) {
-        super();
-        this.application = application
-        application.controllers.push(this)
+        super(application);
 
         this.canvas = canvas
         this.labels = labels
@@ -30,7 +26,7 @@ export default class GLController extends MvController {
         this.controls.update = this.render
         this.texture_loader = new THREE.TextureLoader()
 
-        // this.start()
+        this.update()
     }
 
     create_camera = (fov = 60, near = 0.1, far = 50000) => {

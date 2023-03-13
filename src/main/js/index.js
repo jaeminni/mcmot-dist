@@ -2,6 +2,7 @@ import {MvOptions, MvCamera, MvFrame, MvScene, MvProject} from "./MvObjects"
 import {MvController, MvApplication} from "./MvApplication";
 import GLController from "./GLController";
 import WebController from "./WebController";
+import KeyController from "./KeyController";
 
 window.MvOptions = MvOptions
 window.MvCamera = MvCamera
@@ -14,3 +15,5 @@ window.MvApplication = MvApplication
 
 window.GLController = GLController
 window.WebController = WebController
+
+window.KeyController = KeyController

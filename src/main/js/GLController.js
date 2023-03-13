@@ -78,7 +78,7 @@ export default class GLController extends MvController {
             temp.project(this.camera);
             const x = (temp.x * .5 + .5) * this.canvas.clientWidth;
             const y = (temp.y * -.5 + .5) * this.canvas.clientHeight;
-            label.style.transform = `translate(0, -100%) translate(${x}px,${y}px)`;
+            label.style.transform = `translate(0, 0) translate(${x}px,${y}px)`;
         }
 
         if (this.rendering) {

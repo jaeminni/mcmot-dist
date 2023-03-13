@@ -1,4 +1,5 @@
 import {MvController} from "./MvApplication"
+import {MvOptions} from "./MvObjects";
 
 export default class WebController extends MvController {
     application
@@ -54,7 +55,7 @@ export default class WebController extends MvController {
     }
 
     new_project = (project) => {
-        if(!project) {
+        if (!project) {
             return
         }
         for (const scene in project.scenes) {
@@ -65,7 +66,7 @@ export default class WebController extends MvController {
     }
 
     dispose_project = (project) => {
-        if(!project) {
+        if (!project) {
             return
         }
         this.scene_component.innerHTML = ''
@@ -78,7 +79,7 @@ export default class WebController extends MvController {
     }
 
     select_frame = (frame) => {
-        if(!frame) {
+        if (!frame) {
             return
         }
         frame.cell.classList.add('selected')
@@ -110,7 +111,7 @@ export default class WebController extends MvController {
         document.title = `${frame.parent.name}-${frame.name}`
     }
     deselect_frame = (frame) => {
-        if(!frame) {
+        if (!frame) {
             return
         }
         frame.cell.classList.remove('selected')
@@ -165,13 +166,20 @@ export default class WebController extends MvController {
 
                 const td = document.createElement('td')
                 const input = document.createElement('input')
-                input.type = 'text'
-                input.value = object.properties[key]
                 input.addEventListener('change', () => {
                     object.properties[key] = input.value
                 })
                 td.appendChild(input)
                 tr.appendChild(td)
+
+                if (key === MvOptions.id_name) {
+                    input.type = 'number'
+                    input.focus()
+                } else {
+                    input.type = 'text'
+                    input.disabled = true
+                }
+                input.value = object.properties[key]
             }
         }
     }

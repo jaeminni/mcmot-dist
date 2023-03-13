@@ -22,6 +22,8 @@ class MvController {
     }
     update = () => {
     }
+    changeProperty = (object, key, value) => {
+    }
 }
 
 class MvApplication extends MvController {
@@ -106,6 +108,10 @@ class MvApplication extends MvController {
         if (this.project) {
             this.project.save(forced)
         }
+    }
+
+    changeProperty = (object, key, value) => {
+        this.controllers.forEach(controller => controller.changeProperty(object, key, value))
     }
 }
 

@@ -22,8 +22,9 @@ class MvOptions {
     static opacity = 0.6
     static color = 0x0000ff
     static emissive = 0x000000
-    static select = 0xff0000
+    static select = 0xff00ff
     static hover = 0x00f000
+    static no_id = 0xff0000
     static id_name = 'id'
 }
 
@@ -63,8 +64,21 @@ class MvObject {
         return false
     }
 
+    changeProperty = (key, value) => {
+        this.properties[key] = value
+        if (key === MvOptions.id_name) {
+            if (this.elem) {
+                this.elem.textContent = value
+            }
+        }
+    }
+
     mesh
     cell
+
+    get_color = () => {
+        return this.properties[MvOptions.id_name] ? MvOptions.color : MvOptions.no_id
+    }
 
     create_mesh = (gl_container, web_container) => {
         const shapes = []
@@ -93,7 +107,7 @@ class MvObject {
             opacity: MvOptions.opacity,
             transparent: true,
             wireframe: false,
-            color: MvOptions.color,
+            color: this.get_color(),
             emissive: MvOptions.emissive
         });
 
@@ -104,7 +118,7 @@ class MvObject {
         let position = new THREE.Vector3(minX, minY, 0);
         gl_container.localToWorld(position)
         elem.position = position
-        elem.textContent = this.properties.type;
+        elem.textContent = this.properties[MvOptions.id_name];
         this.elem = elem
         web_container.appendChild(elem);
     }
@@ -140,7 +154,7 @@ class MvObject {
 
     deselect = () => {
         if (this.mesh) {
-            this.mesh.material.color.set(MvOptions.color)
+            this.mesh.material.color.set(this.get_color())
         }
     }
     hover = () => {

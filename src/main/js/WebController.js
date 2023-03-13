@@ -167,7 +167,7 @@ export default class WebController extends MvController {
                 const td = document.createElement('td')
                 const input = document.createElement('input')
                 input.addEventListener('change', () => {
-                    object.properties[key] = input.value
+                    application.changeProperty(object, key, input.value)
                 })
                 td.appendChild(input)
                 tr.appendChild(td)
@@ -188,5 +188,9 @@ export default class WebController extends MvController {
             object.cell.classList.remove('selected')
         }
         this.properties_component.innerHTML = ''
+    }
+
+    changeProperty = (object, key, value) => {
+
     }
 }

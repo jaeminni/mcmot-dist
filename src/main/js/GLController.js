@@ -204,4 +204,7 @@ export default class GLController extends MvController {
             this.update()
         }
     }
+    changeProperty = (object, key, value) => {
+        object.changeProperty(key, value)
+    }
 }

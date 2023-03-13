@@ -106,7 +106,7 @@ export default class GLController extends MvController {
     }
 
     dispose_project = (project) => {
-        this.project = undefined
+        this.project = null
         for (const scene in project.scenes) {
             for (const _frame in project.scenes[scene]) {
                 const frame = project.scenes[scene][_frame]
@@ -116,9 +116,9 @@ export default class GLController extends MvController {
             }
         }
         this.labels.innerHTML = ''
-        this.frame = undefined
-        this.controls.hover = undefined
-        this.controls.select = undefined
+        this.frame = null
+        this.controls.hover = null
+        this.controls.select = null
         this.update()
     }
 
@@ -171,9 +171,9 @@ export default class GLController extends MvController {
             frame.cameras[camera].dispose(this.gl_group, this.labels, this.update)
         }
         this.labels.innerHTML = ''
-        this.frame = undefined
-        this.controls.hover = undefined
-        this.controls.select = undefined
+        this.frame = null
+        this.controls.hover = null
+        this.controls.select = null
         this.update()
     }
     hover_object = (object) => {

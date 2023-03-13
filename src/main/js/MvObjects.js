@@ -24,7 +24,7 @@ class MvOptions {
     static emissive = 0x000000
     static select = 0xff0000
     static hover = 0x00f000
-    static id_name = 'track_id'
+    static id_name = 'id'
 }
 
 class MvObject {
@@ -50,9 +50,7 @@ class MvObject {
         const object = {}
         object['geometry'] = this.faces
         object['wheels'] = this.wheels
-
         Object.assign(object, this.properties)
-
         return object
     }
 
@@ -107,6 +105,7 @@ class MvObject {
         gl_container.localToWorld(position)
         elem.position = position
         elem.textContent = this.properties.type;
+        this.elem = elem
         web_container.appendChild(elem);
     }
 
@@ -115,9 +114,10 @@ class MvObject {
             gl_container.remove(this.mesh)
             this.mesh.geometry.dispose()
             this.mesh.material.dispose()
-            this.mesh = undefined
+            this.mesh = null
         }
-        this.cell = undefined
+        this.elem = null
+        this.cell = null
     }
 
     raycast = (raycaster) => {
@@ -241,10 +241,10 @@ class MvCamera {
             gl_container.remove(this.mesh)
             this.mesh.geometry.dispose()
             this.mesh.material.dispose()
-            this.mesh = undefined
+            this.mesh = null
         }
 
-        this.cell = undefined
+        this.cell = null
         callback && callback()
     }
 

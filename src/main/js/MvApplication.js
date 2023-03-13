@@ -44,7 +44,7 @@ class MvApplication extends MvController {
     dispose_project = (project) => {
         if (project) {
             this.controllers.forEach(controller => controller.dispose_project(project))
-            this.project = undefined
+            this.project = null
         }
     }
 
@@ -56,7 +56,7 @@ class MvApplication extends MvController {
 
     deselect_frame = (frame) => {
         this.controllers.forEach(controller => controller.deselect_frame(frame))
-        this.frame = undefined
+        this.frame = null
     }
     hover_object = (object) => {
         if (this.hovered_object === object) {
@@ -69,7 +69,7 @@ class MvApplication extends MvController {
     }
     dehover_object = (object) => {
         this.controllers.forEach(controller => controller.dehover_object(object))
-        this.hovered_object = undefined
+        this.hovered_object = null
     }
     select_camera = (camera) => {
         if (this.selected_camera === camera) {
@@ -82,7 +82,7 @@ class MvApplication extends MvController {
     }
     deselect_camera = (camera) => {
         this.controllers.forEach(controller => controller.deselect_camera(camera))
-        this.selected_camera = undefined
+        this.selected_camera = null
     }
     select_object = (object) => {
         if (this.selected_object === object) {
@@ -95,7 +95,7 @@ class MvApplication extends MvController {
     }
     deselect_object = (object) => {
         this.controllers.forEach(controller => controller.deselect_object(object))
-        this.selected_object = undefined
+        this.selected_object = null
     }
 
     update = () => {

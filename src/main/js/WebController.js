@@ -74,7 +74,7 @@ export default class WebController extends MvController {
             for (const frame in project.scenes[scene].frames) {
                 this.application.deselect_frame(project.scenes[scene].frames[frame])
             }
-            project.scenes[scene].cell = undefined
+            project.scenes[scene].cell = null
         }
     }
 
@@ -117,9 +117,9 @@ export default class WebController extends MvController {
         frame.cell.classList.remove('selected')
         for (const camera in frame.cameras) {
             frame.cameras[camera].objects.forEach(object => {
-                object.cell = undefined
+                object.cell = null
             })
-            frame.cameras[camera].cell = undefined
+            frame.cameras[camera].cell = null
         }
         this.object_component.innerHTML = ''
         this.properties_component.innerHTML = ''

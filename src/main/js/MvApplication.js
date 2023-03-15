@@ -82,6 +82,7 @@ class MvApplication extends MvController {
         this.frame = null
         this.selected_camera = null
         this.selected_object = null
+        this.hide = false
     }
     hover_object = (object) => {
         if (this.hovered_object === object) {

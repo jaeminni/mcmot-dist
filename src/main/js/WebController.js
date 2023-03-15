@@ -14,9 +14,10 @@ export default class WebController extends MvController {
         this.properties_component = properties_component
     }
 
-    create_frame_cell = (frame) => {
+    create_frame_cell = (frame, count) => {
         const frame_li = document.createElement('li')
-        frame_li.innerHTML = frame.name
+        const count_str = ('0' + count).slice(-2)
+        frame_li.innerHTML = `${count_str}.${frame.name}`
         frame_li.addEventListener('click', () => {
             this.application.select_frame(frame)
         })
@@ -43,8 +44,9 @@ export default class WebController extends MvController {
         scene_li.appendChild(span)
         scene_li.appendChild(nested)
 
+        let count = 0
         for (const frame in scene.frames) {
-            nested.appendChild(this.create_frame_cell(scene.frames[frame]))
+            nested.appendChild(this.create_frame_cell(scene.frames[frame], ++count))
         }
 
         scene.cell = scene_li
@@ -90,11 +92,13 @@ export default class WebController extends MvController {
             title.textContent = frame.cameras[camera].name
             camera_div.appendChild(title)
 
+            let count = 0
             frame.cameras[camera].objects.forEach(object => {
                 const object_div = document.createElement('div')
                 object.cell = object_div
                 object_div.classList.add('object')
-                object_div.textContent = object.properties['type']
+                const count_str = ('0' + ++count).slice(-2)
+                object_div.textContent = `${count_str}.${object.properties['type']}`
                 object_div.addEventListener('click', () => {
                     this.application.select_camera(frame.cameras[camera])
                     this.application.select_object(object)

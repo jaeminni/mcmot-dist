@@ -10,16 +10,20 @@ export default class KeyController {
                 case keyMap['LastImage']: {
                     break;
                 }
-                case keyMap['PrevImage']: {
+                case keyMap['NextImage']: {
+                    application.next_frame()
                     break;
                 }
-                case keyMap['NextImage']: {
+                case keyMap['PrevImage']: {
+                    application.prev_frame()
                     break;
                 }
                 case keyMap['NextObject']: {
+                    application.next_object()
                     break;
                 }
                 case keyMap['PrevObject']: {
+                    application.prev_object()
                     break;
                 }
                 case keyMap['AllHide ']: {

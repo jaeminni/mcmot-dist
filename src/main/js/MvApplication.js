@@ -32,6 +32,14 @@ class MvController {
     }
     changeProperty = (object, key, value) => {
     }
+    prev_frame = () => {
+    }
+    next_frame = () => {
+    }
+    prev_object = () => {
+    }
+    next_object = () => {
+    }
 }
 
 class MvApplication extends MvController {
@@ -120,6 +128,27 @@ class MvApplication extends MvController {
 
     changeProperty = (object, key, value) => {
         this.controllers.forEach(controller => controller.changeProperty(object, key, value))
+    }
+
+    prev_frame = () => {
+        this.frame && this.frame.prev && this.select_frame(this.frame.prev)
+    }
+    next_frame = () => {
+        this.frame && this.frame.next && this.select_frame(this.frame.next)
+    }
+    prev_object = () => {
+        this.selected_object && this.selected_object.prev && this.select_object(this.selected_object.prev)
+    }
+    next_object = () => {
+        let selected_object
+
+        if (this.selected_object && this.selected_object.next) {
+            selected_object = this.selected_object.next
+        } else if (!this.selected_object && this.selected_camera && this.selected_camera.first_object) {
+            selected_object = this.selected_camera.first_object
+        }
+
+        selected_object && this.select_object(selected_object)
     }
 }
 

@@ -29,7 +29,10 @@ class MvOptions {
 }
 
 class MvObject {
-    constructor(parent, data) {
+    constructor(parent, data, prev) {
+        prev && (prev.next = this)
+        this.prev = prev
+
         this.data = data
         const track_id = data[MvOptions.id_name] || null
 
@@ -170,7 +173,10 @@ class MvObject {
 }
 
 class MvCamera {
-    constructor(parent, name, path) {
+    constructor(parent, name, path, prev) {
+        prev && (prev.next = this)
+        this.prev = prev
+
         this.parent = parent
         this.name = name
 
@@ -180,9 +186,11 @@ class MvCamera {
         this.objects = []
         fetch(this.json_path).then(res => res.json()).then(data => {
             this.filename = data['filename']
+            prev = null
             for (const object of data.objects) {
-                this.objects.push(new MvObject(this, object))
+                this.objects.push(prev = new MvObject(this, object, prev))
             }
+            this.objects.length > 0 && (this.first_object = this.objects[0])
         })
 
         this.layout = MvOptions.layout[name] || (() => {
@@ -284,12 +292,16 @@ class MvCamera {
 }
 
 class MvFrame {
-    constructor(parent, name, cameras) {
+    constructor(parent, name, cameras, prev) {
+        prev && (prev.next = this)
+        this.prev = prev
+
         this.parent = parent
         this.name = name
         this.cameras = {}
+        prev = null
         for (const camera in cameras) {
-            this.cameras[camera] = new MvCamera(this, camera, cameras[camera])
+            prev = this.cameras[camera] = new MvCamera(this, camera, cameras[camera], prev)
         }
     }
 
@@ -307,8 +319,9 @@ class MvScene {
         this.parent = parent
         this.name = name;
         this.frames = {}
+        let prev = null
         for (const frame in frames) {
-            this.frames[frame] = new MvFrame(this, frame, frames[frame])
+            prev = this.frames[frame] = new MvFrame(this, frame, frames[frame], prev)
         }
     }
 

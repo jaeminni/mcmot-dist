@@ -173,6 +173,10 @@
 
     const application = new MvApplication()
 
+    document.addEventListener('object-blur', event => {
+        
+    });
+
     window.onresize = () => {
         application.update()
     }

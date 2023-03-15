@@ -149,8 +149,8 @@ export default class WebController extends MvController {
             const title = document.createElement('div')
             title.classList.add('title')
             title.textContent = 'properties'
+            title.tabIndex = 1
             this.properties_component.appendChild(title)
-
             const table = document.createElement('table')
             table.classList.add('list')
             this.properties_component.appendChild(table)
@@ -173,6 +173,14 @@ export default class WebController extends MvController {
                 if (key === MvOptions.id_name) {
                     input.type = 'number'
                     input.focus()
+                    input.addEventListener('keydown', (e) => {
+                        if(e.code === 'Enter') {
+                            input.blur()
+                            document.dispatchEvent(new CustomEvent('object-blur', {
+                                cancelable: true,
+                            }));
+                        }
+                    })
                 } else {
                     input.type = 'text'
                     input.disabled = true

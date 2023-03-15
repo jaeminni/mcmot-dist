@@ -166,6 +166,10 @@ export default class WebController extends MvController {
                 const input = document.createElement('input')
                 input.addEventListener('change', (e) => {
                     if (!Number.isInteger(input.value)) {
+                        setTimeout(() => {
+                            input.value = object.properties[key]
+                            input.select()
+                        })
                         return
                     }
                     application.changeProperty(object, key, input.value)
@@ -177,6 +181,10 @@ export default class WebController extends MvController {
                     input.type = 'number'
                     input.focus()
                     input.addEventListener('keydown', (e) => {
+                        if(!/\d/.test(e.key)) {
+                            e.preventDefault();
+                            return
+                        }
                         if (e.code === 'Enter') {
                             input.blur()
                             document.dispatchEvent(new CustomEvent('object-blur', {

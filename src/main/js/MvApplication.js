@@ -72,6 +72,9 @@ class MvApplication extends MvController {
         this.frame && this.deselect_frame(this.frame)
         this.controllers.forEach(controller => controller.select_frame(frame))
         this.frame = frame
+        document.dispatchEvent(new CustomEvent('object-blur', {
+            cancelable: true,
+        }));
     }
 
     deselect_frame = (frame) => {

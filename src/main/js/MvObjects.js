@@ -19,7 +19,7 @@ class MvOptions {
         },
     }
 
-    static opacity = 0.6
+    static opacity = 0.4
     static color = 0x0000ff
     static emissive = 0x000000
     static select = 0xff00ff

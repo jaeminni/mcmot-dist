@@ -40,6 +40,8 @@ class MvController {
     }
     next_object = () => {
     }
+    all_hide = () => {
+    }
 }
 
 class MvApplication extends MvController {
@@ -149,6 +151,13 @@ class MvApplication extends MvController {
         }
 
         selected_object && this.select_object(selected_object)
+    }
+
+    hide = false
+    all_hide = () => {
+        this.hide = !this.hide
+        this.frame && this.controllers.forEach(controller => controller.all_hide(this.frame, this.hide))
+        this.update()
     }
 }
 

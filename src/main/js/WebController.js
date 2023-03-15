@@ -142,7 +142,7 @@ export default class WebController extends MvController {
             camera.cell.classList.remove('active')
         }
     }
-    select_object = (object) => {
+    select_object = async (object) => {
         if (object && object.cell) {
             object.cell.classList.add('selected')
 
@@ -164,7 +164,10 @@ export default class WebController extends MvController {
 
                 const td = document.createElement('td')
                 const input = document.createElement('input')
-                input.addEventListener('change', () => {
+                input.addEventListener('change', (e) => {
+                    if (!Number.isInteger(input.value)) {
+                        return
+                    }
                     application.changeProperty(object, key, input.value)
                 })
                 td.appendChild(input)
@@ -174,12 +177,15 @@ export default class WebController extends MvController {
                     input.type = 'number'
                     input.focus()
                     input.addEventListener('keydown', (e) => {
-                        if(e.code === 'Enter') {
+                        if (e.code === 'Enter') {
                             input.blur()
                             document.dispatchEvent(new CustomEvent('object-blur', {
                                 cancelable: true,
                             }));
                         }
+                    })
+                    setTimeout(() => {
+                        input.select()
                     })
                 } else {
                     input.type = 'text'

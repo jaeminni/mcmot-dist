@@ -203,4 +203,9 @@ export default class GLController extends MvController {
     changeProperty = (object, key, value) => {
         object.changeProperty(key, value)
     }
+    all_hide = (frame, hide) => {
+        for (const camera in frame.cameras) {
+            frame.cameras[camera].hide(hide)
+        }
+    }
 }

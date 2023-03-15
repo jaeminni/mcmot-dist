@@ -170,6 +170,12 @@ class MvObject {
             this.mesh.material.emissive.set(MvOptions.emissive)
         }
     }
+    hide = (hide) => {
+        if (this.mesh) {
+            this.mesh.visible = !hide
+            this.elem.style.visibility = hide ? 'hidden' : 'visible'
+        }
+    }
 }
 
 class MvCamera {
@@ -288,6 +294,10 @@ class MvCamera {
             return {camera: this}
         }
         return {}
+    }
+
+    hide = (hide) => {
+        this.objects.forEach(object => object.hide(hide))
     }
 }
 

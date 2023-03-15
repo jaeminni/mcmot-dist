@@ -214,6 +214,11 @@
         ipcRenderer.send('save-camera', event.detail);
     });
 
+    document.addEventListener('object-blur', event => {
+        const window_content = document.querySelector('.window-content')
+        window_content.focus()
+    });
+
     let keyMap;
     const keyFile = "js/key.json";
     fetch(keyFile).then(r => r.text()).then(t => {

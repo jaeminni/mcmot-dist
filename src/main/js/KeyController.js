@@ -26,7 +26,8 @@ export default class KeyController {
                     application.prev_object()
                     break;
                 }
-                case keyMap['AllHide ']: {
+                case keyMap['AllHide']: {
+                    application.all_hide()
                     break;
                 }
                 case keyMap['Check']: {

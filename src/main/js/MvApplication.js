@@ -80,6 +80,8 @@ class MvApplication extends MvController {
     deselect_frame = (frame) => {
         this.controllers.forEach(controller => controller.deselect_frame(frame))
         this.frame = null
+        this.selected_camera = null
+        this.selected_object = null
     }
     hover_object = (object) => {
         if (this.hovered_object === object) {

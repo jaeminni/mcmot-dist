@@ -26,6 +26,7 @@ class MvOptions {
     static hover = 0x00f000
     static no_id = 0xff0000
     static id_name = 'id'
+    static epsilon = 0.005
 }
 
 class MvObject {
@@ -72,6 +73,7 @@ class MvObject {
         if (key === MvOptions.id_name) {
             if (this.elem) {
                 this.elem.textContent = value
+                this.deselect()
             }
         }
     }
@@ -85,7 +87,7 @@ class MvObject {
 
     create_mesh = (gl_container, web_container) => {
         const shapes = []
-        let minX = 100000, minY = 100000
+        const all_points = []
         for (const key in this.faces) {
             const face = this.faces[key]
             if (!face) {
@@ -94,13 +96,23 @@ class MvObject {
 
             const points = []
             for (const point of face) {
-                minX = Math.min(minX, point[0])
-                minY = Math.min(minY, point[1])
-                points.push({x: point[0], y: point[1]})
+                const x = point[0], y = point[1]
+                points.push({x, y})
             }
             points.push({x: face[0][0], y: face[0][1]})
             const shape = new THREE.Shape().setFromPoints(points);
             shapes.push(shape)
+            all_points.push(...points)
+        }
+
+        let label_point
+        all_points.sort((a, b) => {
+            return a.x - b.x
+        })
+        if (all_points[0].y <= all_points[1].y) {
+            label_point = all_points[0]
+        } else {
+            label_point = all_points[1]
         }
 
         const geometry = new THREE.ShapeGeometry(shapes);
@@ -118,7 +130,7 @@ class MvObject {
         gl_container.add(this.mesh)
 
         const elem = document.createElement('div');
-        let position = new THREE.Vector3(minX, minY, 0);
+        let position = new THREE.Vector3(label_point.x, label_point.y, 0);
         gl_container.localToWorld(position)
         elem.position = position
         elem.textContent = this.properties[MvOptions.id_name];

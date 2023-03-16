@@ -136,6 +136,7 @@ class MvApplication extends MvController {
 
     changeProperty = (object, key, value) => {
         this.controllers.forEach(controller => controller.changeProperty(object, key, value))
+        this.update()
     }
 
     prev_frame = () => {

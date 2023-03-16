@@ -169,7 +169,8 @@ export default class WebController extends MvController {
                 const td = document.createElement('td')
                 const input = document.createElement('input')
                 input.addEventListener('change', (e) => {
-                    if (!Number.isInteger(input.value)) {
+                    const number = Number.parseInt(input.value)
+                    if (Number.isNaN(number)) {
                         setTimeout(() => {
                             input.value = object.properties[key]
                             input.select()
@@ -185,15 +186,13 @@ export default class WebController extends MvController {
                     input.type = 'number'
                     input.focus()
                     input.addEventListener('keydown', (e) => {
-                        if(!/\d/.test(e.key)) {
-                            e.preventDefault();
-                            return
-                        }
                         if (e.code === 'Enter') {
                             input.blur()
                             document.dispatchEvent(new CustomEvent('object-blur', {
                                 cancelable: true,
                             }));
+                        } else if (!/\d/.test(e.key)) {
+                            e.preventDefault();
                         }
                     })
                     setTimeout(() => {

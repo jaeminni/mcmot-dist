@@ -1,5 +1,6 @@
 import ImageGeometry from "./ImageGeometry";
 import * as THREE from "three";
+import * as martinez from 'martinez-polygon-clipping'
 
 class MvOptions {
     static offset = 100
@@ -27,10 +28,13 @@ class MvOptions {
     static no_id = 0xff0000
     static id_name = 'id'
     static epsilon = 0.005
+    static useClip = true
 }
 
 class MvObject {
     constructor(parent, data, prev) {
+        this.parent = parent
+
         prev && (prev.next = this)
         this.prev = prev
 
@@ -85,7 +89,23 @@ class MvObject {
         return this.properties[MvOptions.id_name] ? MvOptions.color : MvOptions.no_id
     }
 
-    create_mesh = (gl_container, web_container) => {
+    is_clockwise(points) {
+        const center = [0,0]
+        points.forEach(p => {
+            center[0] += p[0]
+            center[1] += p[1]
+        })
+        center[0] /= points.length
+        center[1] /= points.length
+
+        const angles = points.map(p => {
+            const angle = Math.atan2(center[1] - p[1], p[0] - center[0]) * 180 / Math.PI
+            return angle < 0 ? angle + 360 : angle
+        })
+
+        return angles[0] > angles[1]
+    }
+    create_mesh = (clip, gl_container, web_container) => {
         const shapes = []
         const all_points = []
         for (const key in this.faces) {
@@ -94,12 +114,28 @@ class MvObject {
                 continue
             }
 
+            let ps
+            if(MvOptions.useClip) {
+                const is_clockwise = this.is_clockwise(face)
+                if(!is_clockwise) {
+                    face.reverse()
+                }
+                const inter = martinez.intersection(clip, [[[...face, face[0]]]])
+
+                if(!inter) {
+                    console.log(face)
+                    continue
+                }
+                ps = inter[0][0]
+            } else {
+                ps = face
+            }
             const points = []
-            for (const point of face) {
+            for (const point of ps) {
                 const x = point[0], y = point[1]
                 points.push({x, y})
             }
-            points.push({x: face[0][0], y: face[0][1]})
+
             const shape = new THREE.Shape().setFromPoints(points);
             shapes.push(shape)
             all_points.push(...points)
@@ -269,7 +305,9 @@ class MvCamera {
             this.mesh.translateY(offset[1])
             gl_container.add(this.mesh)
 
-            this.objects.forEach(object => object.create_mesh(this.mesh, web_container))
+            const clip = [[[0, 0], [width, 0], [width, height], [0, height], [0, 0]]]
+
+            this.objects.forEach(object => object.create_mesh(clip, this.mesh, web_container))
             callback && callback()
         })
     }

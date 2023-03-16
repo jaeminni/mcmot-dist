@@ -20,6 +20,8 @@
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
+    "2d-polygon-boolean": "^1.0.1",
+    "martinez-polygon-clipping": "^0.7.3",
     "three": "^0.150.1"
   }
 }

@@ -153,7 +153,6 @@ export default class WebController extends MvController {
             const title = document.createElement('div')
             title.classList.add('title')
             title.textContent = 'properties'
-            title.tabIndex = 1
             this.properties_component.appendChild(title)
             const table = document.createElement('table')
             table.classList.add('list')
@@ -191,7 +190,7 @@ export default class WebController extends MvController {
                             document.dispatchEvent(new CustomEvent('object-blur', {
                                 cancelable: true,
                             }));
-                        } else if (!/\d/.test(e.key)) {
+                        } else if (!/\d|\s|(Backspace)|(Tab)/.test(e.key)) {
                             e.preventDefault();
                         }
                     })

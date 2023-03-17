@@ -5,7 +5,7 @@
   "PrevImage": "KeyA",
   "NextObject": "KeyW",
   "PrevObject": "KeyQ",
-  "AllHide": "KeyH",
+  "ToggleHide": "KeyH",
   "Check": "Space",
   "Fit": "KeyB",
   "Formatted": "KeyV",

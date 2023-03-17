@@ -2,7 +2,7 @@ export default class KeyController {
     constructor(application, component, keyMap) {
         this.application = application
         component.addEventListener("keydown", (event) => {
-            console.log(event.code)
+            console.log(event)
             switch (event.code) {
                 case keyMap['FirstImage']: {
                     break;
@@ -26,8 +26,8 @@ export default class KeyController {
                     application.prev_object()
                     break;
                 }
-                case keyMap['AllHide']: {
-                    application.all_hide()
+                case keyMap['ToggleHide']: {
+                    application.toggle_hide()
                     break;
                 }
                 case keyMap['Check']: {

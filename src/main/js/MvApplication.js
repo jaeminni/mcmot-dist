@@ -42,7 +42,7 @@ class MvController {
     }
     next_object = () => {
     }
-    all_hide = () => {
+    toggle_hide = () => {
     }
     toggle_clipping = () => {
     }
@@ -165,9 +165,9 @@ class MvApplication extends MvController {
     }
 
     hide = false
-    all_hide = () => {
+    toggle_hide = () => {
         this.hide = !this.hide
-        this.frame && this.controllers.forEach(controller => controller.all_hide(this.frame, this.hide))
+        this.frame && this.controllers.forEach(controller => controller.toggle_hide(this.frame, this.hide))
         this.update()
     }
 

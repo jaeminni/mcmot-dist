@@ -220,7 +220,7 @@
     });
 
     let keyMap;
-    const keyFile = "js/key.json";
+    const keyFile = "data/key.json";
     fetch(keyFile).then(r => r.text()).then(t => {
         keyMap = JSON.parse(t)
         const keyComponent = document.querySelector(".window-content");

@@ -10,5 +10,6 @@
   "Fit": "KeyB",
   "Formatted": "KeyV",
   "ColorSetting": "KeyC",
-  "VisibleSetting": "KeyG"
+  "VisibleSetting": "KeyG",
+  "Clipping": "KeyP"
 }

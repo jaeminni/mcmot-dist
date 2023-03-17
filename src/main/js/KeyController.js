@@ -45,6 +45,10 @@ export default class KeyController {
                 case keyMap['VisibleSetting']: {
                     break;
                 }
+                case keyMap['Clipping']: {
+                    application.toggle_clipping()
+                    break;
+                }
             }
         })
     }

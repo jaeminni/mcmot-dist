@@ -1,3 +1,5 @@
+import {MvOptions} from "./MvObjects";
+
 class MvController {
     application
 
@@ -41,6 +43,8 @@ class MvController {
     next_object = () => {
     }
     all_hide = () => {
+    }
+    toggle_clipping = () => {
     }
 }
 
@@ -165,6 +169,19 @@ class MvApplication extends MvController {
         this.hide = !this.hide
         this.frame && this.controllers.forEach(controller => controller.all_hide(this.frame, this.hide))
         this.update()
+    }
+
+    toggle_clipping = () => {
+        MvOptions.useClip = !MvOptions.useClip
+        if (this.frame) {
+            const frame = this.frame;
+
+            (async () => {
+                this.deselect_frame(frame)
+            })().then(() => {
+                this.select_frame(frame)
+            })
+        }
     }
 }
 

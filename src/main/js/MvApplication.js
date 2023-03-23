@@ -49,6 +49,7 @@ class MvController {
 }
 
 class MvApplication extends MvController {
+    version = "v1.0.5"
     controllers = []
     project
     frame

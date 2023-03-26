@@ -178,7 +178,7 @@ export default class WebController extends MvController {
                 const label = document.createElement('td')
                 label.textContent = key
                 if(object.errors[key]) {
-                    label.classList.add('has-error')
+                    label.classList.add('has-errors')
                 }
                 tr.appendChild(label)
 

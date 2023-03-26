@@ -425,6 +425,10 @@ class MvFrame {
             }
         } else {
             this.has_errors = false
+            if (this.cell) {
+                this.cell.classList.remove('has-errors')
+            }
+
             for (const camera in this.cameras) {
                 const camera_object = this.cameras[camera]
                 camera_object.has_errors = false
@@ -450,13 +454,13 @@ class MvFrame {
                             continue
                         }
                         for (const src_key in src_object.properties) {
-                            const src_value = src_object.properties[src_key]
+                            const src_value = src_object.properties[src_key] || null
                             for (const dst_object of dst_camera_object.objects) {
                                 const dst_id = dst_object.properties[MvOptions.id_name]
                                 if (!dst_id || src_id !== dst_id) {
                                     continue
                                 }
-                                const dst_value = dst_object.properties[src_key]
+                                const dst_value = dst_object.properties[src_key] || null
                                 if (src_value !== dst_value) {
                                     this.has_errors = true
                                     if (this.cell) {
@@ -465,9 +469,9 @@ class MvFrame {
                                     src_camera_object.has_errors = true
                                     dst_camera_object.has_errors = true
                                     src_object.has_errors = true
-                                    src_object.errors[key] = true
+                                    src_object.errors[src_key] = true
                                     dst_object.has_errors = true
-                                    dst_object.errors[key] = true
+                                    dst_object.errors[src_key] = true
 
                                     src_object.deselect()
                                     dst_object.deselect()

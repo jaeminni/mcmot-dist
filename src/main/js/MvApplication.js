@@ -56,6 +56,10 @@ class MvApplication extends MvController {
 
     constructor() {
         super()
+
+        document.addEventListener('properties-init', () => {
+            this.project && this.project.changeProperty()
+        });
     }
 
     new_project = (project) => {
@@ -140,6 +144,8 @@ class MvApplication extends MvController {
     }
 
     changeProperty = (object, key, value) => {
+        object.changeProperty(key, value)
+        object.parent.parent.changeProperty()
         this.controllers.forEach(controller => controller.changeProperty(object, key, value))
         this.update()
     }

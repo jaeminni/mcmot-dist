@@ -26,6 +26,7 @@ class MvOptions {
     static select = 0xff00ff
     static hover = 0x00f000
     static no_id = 0xff0000
+    static has_errors = 0xffffff
     static id_name = 'id'
     static epsilon = 0.005
     static useClip = true
@@ -53,6 +54,7 @@ class MvObject {
         delete properties['wheels']
 
         this.properties = properties
+        this.errors = {}
     }
 
     toObject = () => {
@@ -84,13 +86,14 @@ class MvObject {
 
     mesh
     cell
+    has_errors
 
     get_color = () => {
-        return this.properties[MvOptions.id_name] ? MvOptions.color : MvOptions.no_id
+        return this.has_errors ? MvOptions.has_errors : this.properties[MvOptions.id_name] ? MvOptions.color : MvOptions.no_id
     }
 
     is_clockwise(points) {
-        const center = [0,0]
+        const center = [0, 0]
         points.forEach(p => {
             center[0] += p[0]
             center[1] += p[1]
@@ -105,6 +108,7 @@ class MvObject {
 
         return angles[0] > angles[1]
     }
+
     create_mesh = (clip, gl_container, web_container) => {
         const shapes = []
         const all_points = []
@@ -115,15 +119,14 @@ class MvObject {
             }
 
             let ps
-            if(MvOptions.useClip) {
+            if (MvOptions.useClip) {
                 const is_clockwise = this.is_clockwise(face)
-                if(!is_clockwise) {
+                if (!is_clockwise) {
                     face.reverse()
                 }
                 const inter = martinez.intersection(clip, [[[...face, face[0]]]])
 
-                if(!inter) {
-                    console.log(face)
+                if (!inter) {
                     continue
                 }
                 ps = inter[0][0]
@@ -227,6 +230,8 @@ class MvObject {
 }
 
 class MvCamera {
+    static json_count = 0
+
     constructor(parent, name, path, prev) {
         prev && (prev.next = this)
         this.prev = prev
@@ -238,6 +243,7 @@ class MvCamera {
         this.json_path = path.json
 
         this.objects = []
+        ++MvCamera.json_count
         fetch(this.json_path).then(res => res.json()).then(data => {
             this.filename = data['filename']
             prev = null
@@ -245,6 +251,11 @@ class MvCamera {
                 this.objects.push(prev = new MvObject(this, object, prev))
             }
             this.objects.length > 0 && (this.first_object = this.objects[0])
+            if (--MvCamera.json_count === 0) {
+                document.dispatchEvent(new CustomEvent('properties-init', {
+                    cancelable: true
+                }));
+            }
         })
 
         this.layout = MvOptions.layout[name] || (() => {
@@ -371,6 +382,104 @@ class MvFrame {
         }
     }
 
+    changeProperty = (src, key, value) => {
+        if (src) {
+            src.changeProperty(key, value)
+            const src_id = src.properties[MvOptions.id_name]
+            if (!src_id) {
+                return
+            }
+
+            this.has_errors = false
+
+            for (const camera in this.cameras) {
+                const camera_object = this.cameras[camera]
+                camera_object.has_errors = false
+                for (const dst of camera_object.objects) {
+                    dst.has_errors = false
+                    dst.deselect()
+                }
+            }
+
+            for (const camera in this.cameras) {
+                const camera_object = this.cameras[camera]
+                for (const dst of camera_object.objects) {
+                    const dst_id = dst.properties[MvOptions.id_name]
+                    if (src === dst || !dst_id || src_id !== dst_id) {
+                        continue
+                    }
+
+                    const dst_value = dst.properties[key]
+                    if (value !== dst_value) {
+                        this.has_errors = true
+                        camera_object.has_errors = true
+                        src.has_errors = true
+                        src.errors[key] = true
+                        dst.has_errors = true
+                        dst.errors[key] = true
+
+                        src.deselect()
+                        dst.deselect()
+                    }
+                }
+            }
+        } else {
+            this.has_errors = false
+            for (const camera in this.cameras) {
+                const camera_object = this.cameras[camera]
+                camera_object.has_errors = false
+                for (const dst of camera_object.objects) {
+                    dst.has_errors = false
+                    for (const p_key in dst.properties) {
+                        dst.errors[p_key] = false
+                        dst.deselect()
+                    }
+                }
+            }
+
+            const camera_keys = Object.keys(this.cameras)
+            const length = camera_keys.length
+
+            for (let i = 0; i < length; ++i) {
+                const src_camera_object = this.cameras[camera_keys[i]]
+                for (let j = i; j < length; ++j) {
+                    const dst_camera_object = this.cameras[camera_keys[j]]
+                    for (const src_object of src_camera_object.objects) {
+                        const src_id = src_object.properties[MvOptions.id_name]
+                        if (!src_id) {
+                            continue
+                        }
+                        for (const src_key in src_object.properties) {
+                            const src_value = src_object.properties[src_key]
+                            for (const dst_object of dst_camera_object.objects) {
+                                const dst_id = dst_object.properties[MvOptions.id_name]
+                                if (!dst_id || src_id !== dst_id) {
+                                    continue
+                                }
+                                const dst_value = dst_object.properties[src_key]
+                                if (src_value !== dst_value) {
+                                    this.has_errors = true
+                                    if (this.cell) {
+                                        this.cell.classList.add('has-errors')
+                                    }
+                                    src_camera_object.has_errors = true
+                                    dst_camera_object.has_errors = true
+                                    src_object.has_errors = true
+                                    src_object.errors[key] = true
+                                    dst_object.has_errors = true
+                                    dst_object.errors[key] = true
+
+                                    src_object.deselect()
+                                    dst_object.deselect()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     cell
 }
 
@@ -390,6 +499,12 @@ class MvScene {
             this.frames[frame].save(forced)
         }
     }
+
+    changeProperty = () => {
+        for (const frame in this.frames) {
+            this.frames[frame].changeProperty()
+        }
+    }
 }
 
 const getObject = (object, key) => {
@@ -404,6 +519,7 @@ class MvProject {
 
     constructor(files) {
         const scenes = {}
+        MvCamera.json_count = 0
         for (const file of files) {
             const exec = MvProject.REGEX.exec(file)
 
@@ -422,6 +538,12 @@ class MvProject {
     save = (forced) => {
         for (const scene_name in this.scenes) {
             this.scenes[scene_name].save(forced)
+        }
+    }
+
+    changeProperty = () => {
+        for (const scene_name in this.scenes) {
+            this.scenes[scene_name].changeProperty()
         }
     }
 }

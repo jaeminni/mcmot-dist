@@ -23,6 +23,9 @@ export default class WebController extends MvController {
         })
 
         frame.cell = frame_li
+        if(frame.has_errors) {
+            frame.cell.classList.add('has-errors')
+        }
 
         return frame_li
     }
@@ -84,19 +87,23 @@ export default class WebController extends MvController {
         }
         frame.cell.classList.add('selected')
         for (const camera in frame.cameras) {
+            const camera_object = frame.cameras[camera]
             const camera_div = document.createElement('div')
             camera_div.classList.add('nested', 'list')
-            frame.cameras[camera].cell = camera_div
+            camera_object.cell = camera_div
             const title = document.createElement('div')
             title.classList.add('title')
             title.textContent = frame.cameras[camera].name
             camera_div.appendChild(title)
 
             let count = 0
-            frame.cameras[camera].objects.forEach(object => {
+            camera_object.objects.forEach(object => {
                 const object_div = document.createElement('div')
                 object.cell = object_div
                 object_div.classList.add('object')
+                if(object.has_errors) {
+                    object_div.classList.add('has-errors')
+                }
                 const count_str = ('0' + ++count).slice(-2)
                 object_div.textContent = `${count_str}.${object.properties['type']}`
                 object_div.addEventListener('click', () => {
@@ -139,6 +146,13 @@ export default class WebController extends MvController {
     select_camera = (camera) => {
         if (camera && camera.cell) {
             camera.cell.classList.add('active')
+            camera.objects.forEach(object => {
+                const object_div = object.cell
+                object_div.classList.remove('has-errors')
+                if(object.has_errors) {
+                    object_div.classList.add('has-errors')
+                }
+            })
         }
     }
     deselect_camera = (camera) => {
@@ -146,7 +160,7 @@ export default class WebController extends MvController {
             camera.cell.classList.remove('active')
         }
     }
-    select_object = async (object) => {
+    select_object = (object) => {
         if (object && object.cell) {
             object.cell.classList.add('selected')
 
@@ -163,18 +177,25 @@ export default class WebController extends MvController {
                 table.appendChild(tr)
                 const label = document.createElement('td')
                 label.textContent = key
+                if(object.errors[key]) {
+                    label.classList.add('has-error')
+                }
                 tr.appendChild(label)
 
                 const td = document.createElement('td')
                 const input = document.createElement('input')
+                input.value = object.properties[key]
+
                 input.addEventListener('change', (e) => {
-                    const number = Number.parseInt(input.value)
-                    if (Number.isNaN(number)) {
-                        setTimeout(() => {
-                            input.value = object.properties[key]
-                            input.select()
-                        })
-                        return
+                    if (key === MvOptions.id_name) {
+                        const number = Number.parseInt(input.value)
+                        if (Number.isNaN(number)) {
+                            setTimeout(() => {
+                                input.value = object.properties[key]
+                                input.select()
+                            })
+                            return
+                        }
                     }
                     application.changeProperty(object, key, input.value)
                 })
@@ -199,9 +220,8 @@ export default class WebController extends MvController {
                     })
                 } else {
                     input.type = 'text'
-                    input.disabled = true
+                    // input.disabled = true
                 }
-                input.value = object.properties[key]
             }
         }
     }
@@ -213,6 +233,18 @@ export default class WebController extends MvController {
     }
 
     changeProperty = (object, key, value) => {
+        const frame = object.parent.parent
+        frame.cell.classList.remove('has-errors')
+        if (frame.has_errors && frame.cell) {
+            frame.cell.classList.add('has-errors')
+        }
 
+        const camera = object.parent
+
+        this.deselect_camera(camera)
+        this.select_camera(camera)
+
+        this.deselect_object(object)
+        this.select_object(object)
     }
 }

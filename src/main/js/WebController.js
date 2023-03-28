@@ -105,7 +105,7 @@ export default class WebController extends MvController {
                     object_div.classList.add('has-errors')
                 }
                 const count_str = ('0' + ++count).slice(-2)
-                object_div.textContent = `${count_str}.${object.properties['type']}`
+                object_div.textContent = `${count_str}.${object.get_name()}`
                 object_div.addEventListener('click', () => {
                     this.application.select_camera(frame.cameras[camera])
                     this.application.select_object(object)
@@ -163,6 +163,9 @@ export default class WebController extends MvController {
     select_object = (object) => {
         if (object && object.cell) {
             object.cell.classList.add('selected')
+            const textContent = object.cell.textContent
+            const count_str = textContent.split('.')[0]
+            object.cell.textContent = `${count_str}.${object.get_name()}`
 
             const title = document.createElement('div')
             title.classList.add('title')

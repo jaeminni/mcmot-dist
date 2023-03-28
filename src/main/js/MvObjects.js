@@ -84,6 +84,12 @@ class MvObject {
         }
     }
 
+    get_name = () => {
+        const type = this.properties['type']
+        const id = this.properties[MvOptions.id_name] || null
+        return type + (id ? ` (${id})` : '')
+    }
+
     mesh
     cell
     has_errors
@@ -454,13 +460,21 @@ class MvFrame {
                             continue
                         }
                         for (const src_key in src_object.properties) {
-                            const src_value = src_object.properties[src_key] || null
+                            let src_value = src_object.properties[src_key] || null
+                            if(src_value) {
+                                src_value = src_value.toString()
+                            }
+
                             for (const dst_object of dst_camera_object.objects) {
                                 const dst_id = dst_object.properties[MvOptions.id_name]
                                 if (!dst_id || src_id !== dst_id) {
                                     continue
                                 }
-                                const dst_value = dst_object.properties[src_key] || null
+                                let dst_value = dst_object.properties[src_key] || null
+                                if(dst_value) {
+                                    dst_value = dst_value.toString()
+                                }
+
                                 if (src_value !== dst_value) {
                                     this.has_errors = true
                                     if (this.cell) {

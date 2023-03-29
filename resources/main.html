@@ -178,10 +178,6 @@
 
     const application = new MvApplication()
 
-    document.addEventListener('object-blur', event => {
-        
-    });
-
     window.onresize = () => {
         application.update()
     }
@@ -219,10 +215,7 @@
         ipcRenderer.send('save-camera', event.detail);
     });
 
-    document.addEventListener('object-blur', event => {
-        const window_content = document.querySelector('.window-content')
-        window_content.focus()
-    });
+    document.addEventListener('object-blur', application.object_blur);
 
     let keyMap;
     const keyFile = "data/key.json";

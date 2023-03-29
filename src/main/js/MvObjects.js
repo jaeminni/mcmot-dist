@@ -461,7 +461,7 @@ class MvFrame {
                         }
                         for (const src_key in src_object.properties) {
                             let src_value = src_object.properties[src_key] || null
-                            if(src_value) {
+                            if (src_value) {
                                 src_value = src_value.toString()
                             }
 
@@ -470,12 +470,18 @@ class MvFrame {
                                 if (!dst_id || src_id !== dst_id) {
                                     continue
                                 }
+
                                 let dst_value = dst_object.properties[src_key] || null
-                                if(dst_value) {
+                                if (dst_value) {
                                     dst_value = dst_value.toString()
                                 }
 
-                                if (src_value !== dst_value) {
+                                const same_key = src_key === MvOptions.id_name
+                                    && src_camera_object === dst_camera_object
+                                    && src_object !== dst_object
+                                    && src_value === dst_value
+
+                                if (src_value !== dst_value || same_key) {
                                     this.has_errors = true
                                     if (this.cell) {
                                         this.cell.classList.add('has-errors')

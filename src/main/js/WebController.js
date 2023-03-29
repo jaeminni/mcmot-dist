@@ -23,7 +23,7 @@ export default class WebController extends MvController {
         })
 
         frame.cell = frame_li
-        if(frame.has_errors) {
+        if (frame.has_errors) {
             frame.cell.classList.add('has-errors')
         }
 
@@ -101,7 +101,7 @@ export default class WebController extends MvController {
                 const object_div = document.createElement('div')
                 object.cell = object_div
                 object_div.classList.add('object')
-                if(object.has_errors) {
+                if (object.has_errors) {
                     object_div.classList.add('has-errors')
                 }
                 const count_str = ('0' + ++count).slice(-2)
@@ -149,7 +149,7 @@ export default class WebController extends MvController {
             camera.objects.forEach(object => {
                 const object_div = object.cell
                 object_div.classList.remove('has-errors')
-                if(object.has_errors) {
+                if (object.has_errors) {
                     object_div.classList.add('has-errors')
                 }
             })
@@ -180,7 +180,7 @@ export default class WebController extends MvController {
                 table.appendChild(tr)
                 const label = document.createElement('td')
                 label.textContent = key
-                if(object.errors[key]) {
+                if (object.errors[key]) {
                     label.classList.add('has-errors')
                 }
                 tr.appendChild(label)
@@ -214,7 +214,7 @@ export default class WebController extends MvController {
                             document.dispatchEvent(new CustomEvent('object-blur', {
                                 cancelable: true,
                             }));
-                        } else if (!/\d|\s|(Backspace)|(Tab)/.test(e.key)) {
+                        } else if (!/\d|\s|(Backspace)|(Tab)|(Arrow\w*)/.test(e.key)) {
                             e.preventDefault();
                         }
                     })
@@ -223,6 +223,9 @@ export default class WebController extends MvController {
                     })
                 } else {
                     input.type = 'text'
+                    input.addEventListener('keydown', (e) => {
+                        e.cancelBubble = true
+                    })
                     // input.disabled = true
                 }
             }

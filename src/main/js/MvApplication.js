@@ -156,10 +156,17 @@ class MvApplication extends MvController {
     next_frame = () => {
         this.frame && this.frame.next && this.select_frame(this.frame.next)
     }
+
+    object_blur = () => {
+        const window_content = document.querySelector('.window-content')
+        window_content.focus()
+    }
     prev_object = () => {
+        this.object_blur()
         this.selected_object && this.selected_object.prev && this.select_object(this.selected_object.prev)
     }
     next_object = () => {
+        this.object_blur()
         let selected_object
 
         if (this.selected_object && this.selected_object.next) {

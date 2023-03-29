@@ -132,7 +132,7 @@ class MvObject {
                 }
                 const inter = martinez.intersection(clip, [[[...face, face[0]]]])
 
-                if (!inter) {
+                if (!inter || inter.length === 0) {
                     continue
                 }
                 ps = inter[0][0]

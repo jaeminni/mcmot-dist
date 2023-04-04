@@ -93,6 +93,9 @@ export default class WebController extends MvController {
             camera_object.cell = camera_div
             const title = document.createElement('div')
             title.classList.add('title')
+            if(camera_object.json_error) {
+                title.classList.add('error')
+            }
             title.textContent = frame.cameras[camera].name
             camera_div.appendChild(title)
 
@@ -226,7 +229,9 @@ export default class WebController extends MvController {
                     input.addEventListener('keydown', (e) => {
                         e.cancelBubble = true
                     })
-                    // input.disabled = true
+                    if (!propertiesConfig['editable']) {
+                        input.disabled = true
+                    }
                 }
             }
         }

@@ -102,6 +102,11 @@
             color: white;
             background-color: #737475;
         }
+
+        .title.error {
+            color: white;
+            background-color: black;
+        }
     </style>
     <style>
         ul, #tree {
@@ -223,6 +228,12 @@
         keyMap = JSON.parse(t)
         const keyComponent = document.querySelector(".window-content");
         new KeyController(application, keyComponent, keyMap)
+    });
+
+    let propertiesConfig;
+    const propertiesConfigFile = 'data/properties.json'
+    fetch(propertiesConfigFile).then(r => r.text()).then(t => {
+        propertiesConfig = JSON.parse(t)
     });
 </script>
 

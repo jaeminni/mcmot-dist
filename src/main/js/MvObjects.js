@@ -249,6 +249,7 @@ class MvCamera {
         this.json_path = path.json
 
         this.objects = []
+        this.json_error = false
         ++MvCamera.json_count
         fetch(this.json_path).then(res => res.json()).then(data => {
             this.filename = data['filename']
@@ -257,6 +258,9 @@ class MvCamera {
                 this.objects.push(prev = new MvObject(this, object, prev))
             }
             this.objects.length > 0 && (this.first_object = this.objects[0])
+        }).catch(e => {
+            this.json_error = true
+        }).finally(() => {
             if (--MvCamera.json_count === 0) {
                 document.dispatchEvent(new CustomEvent('properties-init', {
                     cancelable: true
@@ -316,6 +320,11 @@ class MvCamera {
             const material = new THREE.MeshBasicMaterial({
                 map: texture, depthWrite: false
             });
+            if (this.json_error) {
+                // material.opacity = 0.3
+                material.color = new THREE.Color(0xff0000)
+                // material.transparent = true
+            }
 
             this.mesh = new THREE.Mesh(geometry, material)
             this.mesh.translateX(offset[0])
@@ -450,13 +459,35 @@ class MvFrame {
             const camera_keys = Object.keys(this.cameras)
             const length = camera_keys.length
 
+            const set_error = (src_camera_object, dst_camera_object, src_object, dst_object, src_key) => {
+                this.has_errors = true
+                if (this.cell) {
+                    this.cell.classList.add('has-errors')
+                }
+
+                src_camera_object && (src_camera_object.has_errors = true)
+                dst_camera_object && (dst_camera_object.has_errors = true)
+                src_object && (src_object.has_errors = true)
+                src_object && (src_object.errors[src_key] = true)
+                dst_object && (dst_object.has_errors = true)
+                dst_object && (dst_object.errors[src_key] = true)
+
+                src_object && src_object.deselect()
+                dst_object && dst_object.deselect()
+            }
+
             for (let i = 0; i < length; ++i) {
                 const src_camera_object = this.cameras[camera_keys[i]]
+                if (src_camera_object.json_error) {
+                    set_error(src_camera_object)
+                    continue
+                }
                 for (let j = i; j < length; ++j) {
                     const dst_camera_object = this.cameras[camera_keys[j]]
                     for (const src_object of src_camera_object.objects) {
                         const src_id = src_object.properties[MvOptions.id_name]
                         if (!src_id) {
+                            set_error(src_camera_object, null, src_object, null, MvOptions.id_name)
                             continue
                         }
                         for (const src_key in src_object.properties) {
@@ -467,7 +498,10 @@ class MvFrame {
 
                             for (const dst_object of dst_camera_object.objects) {
                                 const dst_id = dst_object.properties[MvOptions.id_name]
-                                if (!dst_id || src_id !== dst_id) {
+                                if (!dst_id) {
+                                    set_error(null, dst_camera_object, null, dst_object, MvOptions.id_name)
+                                    continue
+                                } else if (src_id !== dst_id) {
                                     continue
                                 }
 
@@ -481,20 +515,10 @@ class MvFrame {
                                     && src_object !== dst_object
                                     && src_value === dst_value
 
-                                if (src_value !== dst_value || same_key) {
-                                    this.has_errors = true
-                                    if (this.cell) {
-                                        this.cell.classList.add('has-errors')
-                                    }
-                                    src_camera_object.has_errors = true
-                                    dst_camera_object.has_errors = true
-                                    src_object.has_errors = true
-                                    src_object.errors[src_key] = true
-                                    dst_object.has_errors = true
-                                    dst_object.errors[src_key] = true
-
-                                    src_object.deselect()
-                                    dst_object.deselect()
+                                if (same_key) {
+                                    set_error(src_camera_object, dst_camera_object, src_object, dst_object, src_key)
+                                } else if (src_value !== dst_value && propertiesConfig['editable']) {
+                                    set_error(src_camera_object, dst_camera_object, src_object, dst_object, src_key)
                                 }
                             }
                         }

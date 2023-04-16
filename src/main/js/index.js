@@ -17,3 +17,7 @@ window.GLController = GLController
 window.WebController = WebController
 
 window.KeyController = KeyController
+
+import * as THREE from 'three'
+
+window.THREE = THREE

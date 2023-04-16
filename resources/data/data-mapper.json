@@ -1,0 +1,6 @@
+{
+  "re": ["camera_(front|rear)_(left|center|right)_(forward|backward)_fov(60|100).*\\/SCENE-(\\w+)-(\\d+)_FRAME_(\\d+)\\.(json|jpg|png)$", "i"],
+  "scene" : "SCENE-{5}-{6}",
+  "frame": "{7}",
+  "camera": "{1}_{2}_{3}_{4}"
+}

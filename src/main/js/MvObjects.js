@@ -174,6 +174,10 @@ class MvObject {
         this.mesh = new THREE.Mesh(geometry, material)
         gl_container.add(this.mesh)
 
+        // const bufferAttribute = geometry.getAttribute('position')
+        // const points = new THREE.Points(geometry, new THREE.PointsMaterial({size: 1.5}));
+        // gl_container.add(points)
+
         const elem = document.createElement('div');
         let position = new THREE.Vector3(label_point.x, label_point.y, 0);
         gl_container.localToWorld(position)
@@ -208,6 +212,8 @@ class MvObject {
 
     select = () => {
         if (this.mesh) {
+            console.log(this)
+            window.object = this;
             this.mesh.material.color.set(MvOptions.select)
         }
     }
@@ -562,18 +568,29 @@ const getObject = (object, key) => {
     return object[key]
 }
 
+function replace_data(data, label) {
+    const replace =label.match(/{(\d+)}/g)
+    replace.forEach(match => {
+        const exec = /{(\d+)}/.exec(match)
+        if(exec) {
+            label = label.replaceAll(match, data[exec[1]])
+        }
+    })
+
+    return label
+}
+
 class MvProject {
-    static REGEX = /camera_(front|rear)_(left|center|right)_(forward|backward)_fov(60|100)\/SCENE-(\w+)-(\d+)_FRAME_(\d+)\.(json|jpg|png)$/i
+    static REGEX = /camera_(front|rear)_(left|center|right)_(forward|backward)_fov(60|100).*\/SCENE-(\w+)-(\d+)_FRAME_(\d+)\.(json|jpg|png)$/i
 
     constructor(files) {
         const scenes = {}
         MvCamera.json_count = 0
         for (const file of files) {
-            const exec = MvProject.REGEX.exec(file)
-
-            const scene = getObject(scenes, `SCENE-${exec[5]}-${exec[6]}`)
-            const frame = getObject(scene, exec[7])
-            const camera = getObject(frame, `${exec[1]}_${exec[2]}_${exec[3]}_${exec[4]}`)
+            const exec = data_mapper.re.exec(file)
+            const scene = getObject(scenes, replace_data(exec, data_mapper.scene))
+            const frame = getObject(scene, replace_data(exec, data_mapper.frame))
+            const camera = getObject(frame, replace_data(exec, data_mapper.camera))
             const target = /json/i.test(exec[8]) ? 'json' : 'image'
             camera[target] = file
         }

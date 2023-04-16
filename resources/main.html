@@ -235,6 +235,13 @@
     fetch(propertiesConfigFile).then(r => r.text()).then(t => {
         propertiesConfig = JSON.parse(t)
     });
+
+    let data_mapper;
+    const data_mapperFile = 'data/data-mapper.json'
+    fetch(data_mapperFile).then(r => r.text()).then(t => {
+        data_mapper = JSON.parse(t);
+        data_mapper.re = new RegExp(...data_mapper.re)
+    });
 </script>
 
 </body>

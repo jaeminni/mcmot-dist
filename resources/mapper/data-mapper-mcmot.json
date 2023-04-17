@@ -2,6 +2,7 @@
   "key_id": "id",
   "key_class": "type",
   "key_objects": "objects",
+  "to_int": ["id"],
   "re": [
     "camera_(front|rear)_(left|center|right)_(forward|backward)_fov(60|100).*\\/SCENE-(\\w+)-(\\d+)_FRAME_(\\d+)\\.(json|jpg|png)$",
     "i"

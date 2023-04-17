@@ -30,8 +30,7 @@ export default class WebController extends MvController {
     create_frame_cell = (frame, count) => {
         const frame_li = document.createElement('li')
         const count_length = propertiesConfig['frame-index-length']
-        const count_prefix = ''.padStart(count_length, '0')
-        const count_str = (count_prefix + count).slice(-count_length)
+        const count_str = String(count).padStart(count_length, '0')
         frame_li.innerHTML = `${count_str}.${frame.name}`
         frame_li.addEventListener('click', () => {
             this.application.select_frame(frame)

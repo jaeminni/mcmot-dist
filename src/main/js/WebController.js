@@ -14,9 +14,24 @@ export default class WebController extends MvController {
         this.properties_component = properties_component
     }
 
+    get_count_length() {
+        let length = propertiesConfig['frame-index-length'] | 3
+        length = Number(length)
+        if(Number.isNaN(length)) {
+            length = 3
+        }
+
+        let prefix = ''
+        for(let i = 0; i < length; ++i) {
+
+        }
+    }
+
     create_frame_cell = (frame, count) => {
         const frame_li = document.createElement('li')
-        const count_str = ('0' + count).slice(-2)
+        const count_length = propertiesConfig['frame-index-length']
+        const count_prefix = ''.padStart(count_length, '0')
+        const count_str = (count_prefix + count).slice(-count_length)
         frame_li.innerHTML = `${count_str}.${frame.name}`
         frame_li.addEventListener('click', () => {
             this.application.select_frame(frame)

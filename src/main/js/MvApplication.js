@@ -139,7 +139,7 @@ class MvApplication extends MvController {
 
     save = (forced) => {
         if (this.project) {
-            this.project.save(forced)
+            return this.project.save(forced)
         }
     }
 

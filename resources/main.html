@@ -221,7 +221,9 @@
     }
 
     function request_save_project() {
-        application.save()
+        if(application.save()) {
+            setTimeout(() => {alert("Saved")}, 1000)
+        }
     }
 
     document.addEventListener('save-camera', event => {

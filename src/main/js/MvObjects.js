@@ -323,10 +323,11 @@ class MvCamera {
     }
 
     save = (forced) => {
+        let needSave = false
         if (forced) {
             this.internal_save()
+            needSave = true
         } else {
-            let needSave = false
             for (const object of this.objects) {
                 if (object.isPropertyChanged()) {
                     needSave = true
@@ -338,6 +339,8 @@ class MvCamera {
                 this.internal_save()
             }
         }
+
+        return needSave
     }
 
     mesh
@@ -426,9 +429,11 @@ class MvFrame {
     }
 
     save = (forced) => {
+        let needSave = false
         for (const camera in this.cameras) {
-            this.cameras[camera].save(forced)
+            needSave |= this.cameras[camera].save(forced)
         }
+        return needSave
     }
 
     changeProperty = (src, key, value) => {
@@ -577,9 +582,11 @@ class MvScene {
     }
 
     save = (forced) => {
+        let needSave = false
         for (const frame in this.frames) {
-            this.frames[frame].save(forced)
+            needSave |= this.frames[frame].save(forced)
         }
+        return needSave
     }
 
     changeProperty = () => {
@@ -629,9 +636,11 @@ class MvProject {
     }
 
     save = (forced) => {
+        let needSave = false
         for (const scene_name in this.scenes) {
-            this.scenes[scene_name].save(forced)
+            needSave |= this.scenes[scene_name].save(forced)
         }
+        return needSave
     }
 
     changeProperty = () => {

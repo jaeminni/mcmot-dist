@@ -3,6 +3,18 @@ export default class KeyController {
         this.application = application
         component.addEventListener("keydown", (event) => {
             console.log(event)
+            if(event.getModifierState("Accel")) {
+                switch (event.code) {
+                    case 'KeyS': {
+                        request_save_project()
+                        break
+                    }
+                    case 'KeyO': {
+                        request_open_project()
+                        break
+                    }
+                }
+            }
             switch (event.code) {
                 case keyMap['FirstImage']: {
                     break;

@@ -39,6 +39,14 @@ class MvObject {
         prev && (prev.next = this)
         this.prev = prev
 
+        if (data_mapper['to_json']) {
+            for (const to_json of data_mapper['to_json']) {
+                if(data[to_json]) {
+                    data[to_json] = JSON.stringify(data[to_json])
+                }
+            }
+        }
+
         this.data = data
         const track_id = data[MvOptions.id_name] || null
 
@@ -56,13 +64,6 @@ class MvObject {
         delete properties['wheels']
 
         this.properties = properties
-        if (data_mapper['to_json']) {
-            for (const to_json of data_mapper['to_json']) {
-                if(this.properties[to_json]) {
-                    this.properties[to_json] = JSON.stringify(this.properties[to_json])
-                }
-            }
-        }
         this.errors = {}
     }
 
@@ -72,14 +73,16 @@ class MvObject {
         if (this.hasOwnProperty('wheels')) {
             object['wheels'] = this.wheels
         }
+        Object.assign(object, this.properties)
+
         if (data_mapper['to_json']) {
             for (const to_json of data_mapper['to_json']) {
-                if(this.properties[to_json]) {
-                    this.properties[to_json] = JSON.parse(this.properties[to_json])
+                if(object[to_json]) {
+                    object[to_json] = JSON.parse(object[to_json])
                 }
             }
         }
-        Object.assign(object, this.properties)
+        Object.assign(this.data, this.properties)
         return object
     }
 

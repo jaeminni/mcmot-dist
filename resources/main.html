@@ -189,7 +189,6 @@
     </footer>
 </div>
 <script>
-
     const application = new MvApplication()
 
     window.onresize = () => {
@@ -249,13 +248,28 @@
     let data_mapper;
     const change_mapper = () => {
         const value = select_mapper.value
+        const fs = require('fs')
+
+        const content = {
+            "select-mapper-value": value
+        }
+
+        fs.writeFileSync(__dirname + '/data/data-mapper.json', JSON.stringify(content))
+
         fetch(value).then(r => r.text()).then(t => {
             data_mapper = JSON.parse(t);
             MvOptions.id_name = data_mapper['key_id']
             data_mapper.re = new RegExp(...data_mapper.re)
         });
     }
-    change_mapper()
+
+    function select_init() {
+        fetch('data/data-mapper.json').then(r => r.json()).then(json => {
+            select_mapper.value = json['select-mapper-value']
+            select_mapper.dispatchEvent(new Event('change'))
+        })
+    }
+    select_init()
 </script>
 
 </body>

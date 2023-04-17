@@ -145,6 +145,11 @@
         .has-errors {
             background-color: red;
         }
+
+        .select-mapper {
+            vertical-align: middle;
+            margin-left: 10px;
+        }
     </style>
 </head>
 
@@ -159,6 +164,10 @@
                 <button class="btn btn-default" onclick="request_save_project();">
                     <span class="icon icon-floppy"></span>
                 </button>
+                <select class="select-mapper" onchange="change_mapper()">
+                    <option value="mapper/data-mapper-mcmot.json">mcmot-master</option>
+                    <option value="mapper/data-mapper-tld.json">mcmot-tld</option>
+                </select>
             </div>
         </div>
     </header>
@@ -236,13 +245,17 @@
         propertiesConfig = JSON.parse(t)
     });
 
+    const select_mapper = document.querySelector('.select-mapper')
     let data_mapper;
-    const data_mapperFile = 'data/data-mapper.json'
-    fetch(data_mapperFile).then(r => r.text()).then(t => {
-        data_mapper = JSON.parse(t);
-        MvOptions.id_name = data_mapper['key_id']
-        data_mapper.re = new RegExp(...data_mapper.re)
-    });
+    const change_mapper = () => {
+        const value = select_mapper.value
+        fetch(value).then(r => r.text()).then(t => {
+            data_mapper = JSON.parse(t);
+            MvOptions.id_name = data_mapper['key_id']
+            data_mapper.re = new RegExp(...data_mapper.re)
+        });
+    }
+    change_mapper()
 </script>
 
 </body>

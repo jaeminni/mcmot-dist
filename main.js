@@ -14,7 +14,7 @@ function getFiles(file_path, files, ext) {
         }
     } else {
         if (!ext || ext.test(file_path)) {
-            files.push(file_path)
+            files.push(file_path.replaceAll('\\', '/'))
         }
     }
 }

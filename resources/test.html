@@ -1,0 +1,156 @@
+<html>
+<head>
+    <style>
+        html, body { width: 100%; height: 100%; background: #000; }
+        body { margin: 0; overflow: hidden; }
+        canvas { width: 100vw; height: 100vh; }
+        #selected { position: absolute; top: 10; left: 10; font-size: 40; color: black; background: #fff; width: 100%;}
+    </style>
+</head>
+<body>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js'></script>
+<script src='https://rawgit.com/YaleDHLab/pix-plot/master/pixplot/web/assets/vendor/src/trackball-controls.js'></script>
+
+<div id='selected'></div>
+<canvas />
+
+<script type='x-shader/x-vertex' id='vertex-shader'>
+  precision mediump float;
+
+  uniform mat4 modelViewMatrix;
+  uniform mat4 projectionMatrix;
+  uniform vec3 cameraPosition;
+  attribute vec3 position;    // blueprint's vertex positions
+  attribute vec3 color;       // only used for raycasting
+  attribute vec3 translation; // x y translation offsets for an instance
+  varying vec3 vColor;
+
+  void main() {
+    vColor = color;
+    vec3 pos = position + translation;
+    vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+    gl_Position = projectionMatrix * mvPos;
+    gl_PointSize = 10000.0 / -mvPos.z;
+  }
+  </script>
+
+<script type='x-shader/x-fragment' id='fragment-shader'>
+  precision highp float;
+  varying vec3 vColor;
+
+  void main() {
+    gl_FragColor = vec4(vColor, 1.0);
+  }
+  </script>
+
+<script>
+
+    var scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xffffff);
+
+    var aspectRatio = window.innerWidth / window.innerHeight;
+    var camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 100000);
+    camera.position.set(0, 1, -600);
+
+    var canvas = document.querySelector('canvas');
+    var renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        canvas: canvas,
+    });
+
+    var controls = new THREE.TrackballControls(camera, canvas);
+
+    var geometry  = new THREE.InstancedBufferGeometry();
+    var BA = THREE.BufferAttribute;
+    var IBA = THREE.InstancedBufferAttribute;
+
+    // add data for each observation
+    var n = 10000; // number of observations
+    var rootN = n**(1/2);
+    var cellSize = 20;
+    var color = new THREE.Color();
+    var translations = new Float32Array( n * 3 );
+    var colors = new Float32Array( n * 3 );
+    var translationIterator = 0;
+    var colorIterator = 0;
+
+    for (var i=0; i<n; i++) {
+        var rgb = color.setHex(i+1);
+        translations[translationIterator++] = (i % rootN) * cellSize;
+        translations[translationIterator++] = Math.floor(i / rootN) * cellSize;
+        translations[translationIterator++] = 0;
+        colors[colorIterator++] = rgb.r;
+        colors[colorIterator++] = rgb.g;
+        colors[colorIterator++] = rgb.b;
+    }
+
+    // picking scene
+    var pickingScene = new THREE.Scene();
+    pickingScene.background = new THREE.Color(0x000000);
+    // must be identical to the size of the drawn scene
+    var pickingTexture = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+    var pixelBuffer = new Uint8Array(4);
+
+    canvas.addEventListener('mousemove', function(e) {
+
+        // render the picking scene
+        renderer.setRenderTarget(pickingTexture)
+        renderer.render(pickingScene, camera);
+        renderer.setRenderTarget(null);
+
+        var x = e.clientX * window.devicePixelRatio;
+        var y = pickingTexture.height - e.clientY * window.devicePixelRatio;
+
+        // read the selected pixel
+        renderer.readRenderTargetPixels(pickingTexture, x, y, 1, 1, pixelBuffer);
+
+        var id =(pixelBuffer[0] << 16) | (pixelBuffer[1] << 8) | (pixelBuffer[2]);
+
+        document.querySelector('#selected').textContent = id-1 >= 0
+            ? 'You are hovering point ' + (id-1).toString()
+            : 'You are hovering point';
+    })
+
+    // rendered scene
+    var positionAttr = new BA( new Float32Array( [0, 0, 0] ), 3);
+    var translationAttr = new IBA(translations, 3, true, 1);
+    var colorAttr = new IBA(colors, 3, true, 1);
+    geometry.setAttribute('position', positionAttr);
+    geometry.setAttribute('translation', translationAttr);
+    geometry.setAttribute('color', colorAttr);
+    var material = new THREE.RawShaderMaterial({
+        vertexShader: document.getElementById('vertex-shader').textContent,
+        fragmentShader: document.getElementById('fragment-shader').textContent,
+    });
+    var mesh = new THREE.Points(geometry, material);
+    mesh.frustumCulled = false; // prevent the mesh from being clipped on drag
+    scene.add(mesh);
+    pickingScene.add(mesh.clone());
+
+    function onWindowResize() {
+        var width = canvas.clientWidth * window.devicePixelRatio;
+        var height = canvas.clientHeight * window.devicePixelRatio;
+
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+
+        // pass false to prevent three.js from tampering with css
+        renderer.setSize(width, height, false);
+        pickingTexture.setSize(width, height);
+    }
+
+    function render() {
+        requestAnimationFrame(render);
+        renderer.render(scene, camera);
+        controls.update();
+    };
+
+    window.addEventListener('resize', onWindowResize)
+
+    // set the initial renderer sizes
+    onWindowResize();
+    render();
+
+</script>
+</body>
+</html>

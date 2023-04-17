@@ -1,0 +1,14 @@
+{
+  "key_id": "objectID",
+  "key_class": "box",
+  "key_objects": "overhead_objects",
+  "to_json": ["blobs"],
+  "re": [
+    "scene_(\\d+)\\/.*camera_(front|rear)_(left|center|right)_(forward|backward)_fov(60|100).*\\/(\\d+)\\.(json|jpg|png)$",
+    "i"
+  ],
+  "scene": "SCENE-{1}",
+  "frame": "{6}",
+  "camera": "{2}_{3}_{4}_{5}",
+  "ext": "{7}"
+}

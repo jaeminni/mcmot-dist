@@ -48,19 +48,37 @@ class MvObject {
         Object.assign(properties, data)
 
         this.faces = properties['geometry']
-        this.wheels = properties['wheels']
+        if (properties.hasOwnProperty('wheels')) {
+            this.wheels = properties['wheels']
+        }
 
         delete properties['geometry']
         delete properties['wheels']
 
         this.properties = properties
+        if (data_mapper['to_json']) {
+            for (const to_json of data_mapper['to_json']) {
+                if(this.properties[to_json]) {
+                    this.properties[to_json] = JSON.stringify(this.properties[to_json])
+                }
+            }
+        }
         this.errors = {}
     }
 
     toObject = () => {
         const object = {}
         object['geometry'] = this.faces
-        object['wheels'] = this.wheels
+        if (this.hasOwnProperty('wheels')) {
+            object['wheels'] = this.wheels
+        }
+        if (data_mapper['to_json']) {
+            for (const to_json of data_mapper['to_json']) {
+                if(this.properties[to_json]) {
+                    this.properties[to_json] = JSON.parse(this.properties[to_json])
+                }
+            }
+        }
         Object.assign(object, this.properties)
         return object
     }
@@ -85,7 +103,7 @@ class MvObject {
     }
 
     get_name = () => {
-        const type = this.properties['type']
+        const type = this.properties[data_mapper['key_class']]
         const id = this.properties[MvOptions.id_name] || null
         return type + (id ? ` (${id})` : '')
     }
@@ -115,39 +133,46 @@ class MvObject {
         return angles[0] > angles[1]
     }
 
+    get_shape(clip, shapes, all_points, face) {
+        let ps
+        if (MvOptions.useClip) {
+            const is_clockwise = this.is_clockwise(face)
+            if (!is_clockwise) {
+                face.reverse()
+            }
+            const inter = martinez.intersection(clip, [[[...face, face[0]]]])
+
+            if (!inter || inter.length === 0) {
+                return
+            }
+            ps = inter[0][0]
+        } else {
+            ps = face
+        }
+        const points = []
+        for (const point of ps) {
+            const x = point[0], y = point[1]
+            points.push({x, y})
+        }
+
+        const shape = new THREE.Shape().setFromPoints(points);
+        shapes.push(shape)
+        all_points.push(...points)
+    }
+
     create_mesh = (clip, gl_container, web_container) => {
         const shapes = []
         const all_points = []
-        for (const key in this.faces) {
-            const face = this.faces[key]
-            if (!face) {
-                continue
-            }
-
-            let ps
-            if (MvOptions.useClip) {
-                const is_clockwise = this.is_clockwise(face)
-                if (!is_clockwise) {
-                    face.reverse()
-                }
-                const inter = martinez.intersection(clip, [[[...face, face[0]]]])
-
-                if (!inter || inter.length === 0) {
+        if (Array.isArray(this.faces)) {
+            this.get_shape(clip, shapes, all_points, this.faces)
+        } else {
+            for (const key in this.faces) {
+                const face = this.faces[key]
+                if (!face) {
                     continue
                 }
-                ps = inter[0][0]
-            } else {
-                ps = face
+                this.get_shape(clip, shapes, all_points, face)
             }
-            const points = []
-            for (const point of ps) {
-                const x = point[0], y = point[1]
-                points.push({x, y})
-            }
-
-            const shape = new THREE.Shape().setFromPoints(points);
-            shapes.push(shape)
-            all_points.push(...points)
         }
 
         let label_point
@@ -260,7 +285,7 @@ class MvCamera {
         fetch(this.json_path).then(res => res.json()).then(data => {
             this.filename = data['filename']
             prev = null
-            for (const object of data.objects) {
+            for (const object of data[data_mapper['key_objects']]) {
                 this.objects.push(prev = new MvObject(this, object, prev))
             }
             this.objects.length > 0 && (this.first_object = this.objects[0])
@@ -280,10 +305,10 @@ class MvCamera {
     }
 
     internal_save() {
-        const file = {
-            filename: this.filename,
-            objects: this.objects.map(object => object.toObject())
-        }
+        const file  = {}
+        file['filename'] = this.filename
+        const key_objects = data_mapper['key_objects']
+        file[key_objects] = this.objects.map(object => object.toObject())
 
         document.dispatchEvent(new CustomEvent('save-camera', {
             cancelable: true,
@@ -569,10 +594,10 @@ const getObject = (object, key) => {
 }
 
 function replace_data(data, label) {
-    const replace =label.match(/{(\d+)}/g)
+    const replace = label.match(/{(\d+)}/g)
     replace.forEach(match => {
         const exec = /{(\d+)}/.exec(match)
-        if(exec) {
+        if (exec) {
             label = label.replaceAll(match, data[exec[1]])
         }
     })
@@ -591,7 +616,7 @@ class MvProject {
             const scene = getObject(scenes, replace_data(exec, data_mapper.scene))
             const frame = getObject(scene, replace_data(exec, data_mapper.frame))
             const camera = getObject(frame, replace_data(exec, data_mapper.camera))
-            const target = /json/i.test(exec[8]) ? 'json' : 'image'
+            const target = /json/i.test(replace_data(exec, data_mapper.ext)) ? 'json' : 'image'
             camera[target] = file
         }
         this.scenes = {}

@@ -14,6 +14,7 @@ export default class KeyController {
                         break
                     }
                 }
+                return
             }
             switch (event.code) {
                 case keyMap['FirstImage']: {

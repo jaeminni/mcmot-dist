@@ -6,7 +6,7 @@ export default class KeyController {
             if(event.getModifierState("Accel")) {
                 switch (event.code) {
                     case 'KeyS': {
-                        request_save_project()
+                        request_save_project(event.getModifierState("Shift"))
                         break
                     }
                     case 'KeyO': {

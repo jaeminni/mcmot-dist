@@ -82,6 +82,15 @@ class MvObject {
                 }
             }
         }
+
+        if (data_mapper['to_int']) {
+            for (const to_int of data_mapper['to_int']) {
+                if(object[to_int]) {
+                    object[to_int] = Number(object[to_int])
+                }
+            }
+        }
+
         Object.assign(this.data, this.properties)
         return object
     }

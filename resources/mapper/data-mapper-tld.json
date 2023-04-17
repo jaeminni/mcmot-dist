@@ -3,6 +3,7 @@
   "key_class": "box",
   "key_objects": "overhead_objects",
   "to_json": ["blobs"],
+  "to_int": ["objectID"],
   "re": [
     "scene_(\\d+)\\/.*camera_(front|rear)_(left|center|right)_(forward|backward)_fov(60|100).*\\/(\\d+)\\.(json|jpg|png)$",
     "i"

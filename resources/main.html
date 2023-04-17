@@ -220,8 +220,8 @@
         ipcRenderer.send('open-directory');
     }
 
-    function request_save_project() {
-        if(application.save()) {
+    function request_save_project(forced) {
+        if(application.save(forced)) {
             setTimeout(() => {alert("Saved")}, 1000)
         }
     }

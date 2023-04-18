@@ -150,7 +150,48 @@
             vertical-align: middle;
             margin-left: 10px;
         }
+
+        .flexible-pane {
+            max-width: 50%;
+            position: relative;
+        }
     </style>
+    <style>
+        .dragger {
+            display: flex;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            box-shadow: 2px 0 10px rgb(0 0 0 / 10%);
+            background-color: antiquewhite;
+            justify-content: center;
+            border-radius: 3px;
+            align-items: center;
+            z-index: 3;
+            border: solid 1px;
+        }
+
+        .dragger.h {
+            top: 50%;
+            left: 100%;
+            width: 10px;
+            height: 45px;
+            cursor: ew-resize;
+        }
+
+        .dragger.v {
+            top: 100%;
+            left: 50%;
+            width: 45px;
+            height: 10px;
+            cursor: ns-resize;
+        }
+
+        .dragger.hide {
+            cursor: pointer !important;
+        }
+
+    </style>
+
 </head>
 
 <body>
@@ -167,13 +208,14 @@
                 <select class="select-mapper" onchange="change_mapper()">
                     <option value="mapper/data-mapper-mcmot.json">mcmot-master</option>
                     <option value="mapper/data-mapper-tld.json">mcmot-tld</option>
+                    <option value="mapper/data-mapper-tld(VR).json">mcmot-tld(VR)</option>
                 </select>
             </div>
         </div>
     </header>
     <div class="window-content" tabindex="0">
         <div class="pane-group">
-            <div class="pane-sm sidebar" id="side">
+            <div class="pane-sm sidebar flexible-pane" id="side">
                 <ul id="tree" class="auto-scroll-v">
                 </ul>
             </div>
@@ -188,6 +230,65 @@
     <footer class="toolbar toolbar-footer">
     </footer>
 </div>
+
+<script>
+    function drag(draggee, dragger, d, getValue, setValue) {
+        let _d, value, clicked, reserved;
+
+        function mouseDown(event) {
+            window.addEventListener('mousemove', mouseMove);
+            window.addEventListener('mouseup', mouseUp);
+            clicked = true;
+            if (!!reserved) {
+                return;
+            }
+            _d = event[d];
+            value = draggee[getValue];
+        }
+
+        function mouseUp() {
+            window.removeEventListener('mousemove', mouseMove);
+            window.removeEventListener('mouseup', mouseUp);
+            if (reserved) {
+                draggee.style[setValue] = reserved;
+                reserved = undefined;
+                dragger.classList.remove('hide');
+            } else if (clicked) {
+                reserved = draggee.style[setValue];
+                draggee.style[setValue] = 0;
+                dragger.classList.add('hide');
+            }
+        }
+
+        function mouseMove(event) {
+            if (!reserved) {
+                clicked = false;
+                const _v = event[d];
+                draggee.style[setValue] = `${value + _v - _d}px`;
+            }
+        }
+
+        dragger.addEventListener("mousedown", mouseDown);
+    }
+
+    function dragH(draggee) {
+        const dragger = document.createElement("div");
+        dragger.classList.add('dragger', 'h');
+        draggee.appendChild(dragger);
+        drag(draggee, dragger, "clientX", "clientWidth", "width")
+    }
+
+    function dragV(draggee) {
+        const dragger = document.createElement("div");
+        dragger.classList.add('dragger', 'v');
+        draggee.appendChild(dragger);
+        drag(draggee, dragger, "clientY", "clientHeight", "height")
+    }
+
+    const flexible_pane = document.querySelector('.flexible-pane')
+    dragH(flexible_pane);
+</script>
+
 <script>
     const application = new MvApplication()
 
@@ -195,7 +296,12 @@
         application.update()
     }
 
+    const resizeObserver = new ResizeObserver((entries) => {
+        application.update()
+    })
+
     const canvas = document.querySelector('#main')
+    resizeObserver.observe(canvas)
     const labels = document.querySelector('.labels')
     const gl_controller = new GLController(application, canvas, labels)
 
@@ -261,7 +367,7 @@
         fetch(value).then(r => r.text()).then(t => {
             data_mapper = JSON.parse(t);
             MvOptions.id_name = data_mapper['key_id']
-            data_mapper.re = new RegExp(...data_mapper.re)
+            data_mapper.re =  RegExp.prototype.constructor.apply(null, data_mapper.re)
         });
     }
 

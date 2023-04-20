@@ -374,6 +374,7 @@
     function select_init() {
         fetch('data/data-mapper.json').then(r => r.json()).then(json => {
             select_mapper.value = json['select-mapper-value']
+        }).finally(() => {
             select_mapper.dispatchEvent(new Event('change'))
         })
     }

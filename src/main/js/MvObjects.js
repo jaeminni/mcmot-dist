@@ -42,7 +42,7 @@ class MvObject {
         if (data_mapper['to_json']) {
             for (const to_json of data_mapper['to_json']) {
                 if(data[to_json]) {
-                    data[to_json] = JSON.stringify(data[to_json])
+                    data[to_json] = JSON.stringify(data[to_json], null, 2)
                 }
             }
         }

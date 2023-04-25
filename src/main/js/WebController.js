@@ -203,8 +203,16 @@ export default class WebController extends MvController {
                 tr.appendChild(label)
 
                 const td = document.createElement('td')
-                const input = document.createElement('input')
+                let type = 'input'
+                if(key === 'blobs') {
+                    type = 'textarea'
+                }
+                const input = document.createElement(type)
                 input.value = object.properties[key]
+                if(type === 'textarea') {
+                    input.style.width = '138px'
+                    input.style.height = '150px'
+                }
 
                 input.addEventListener('change', (e) => {
                     if (key === MvOptions.id_name) {
@@ -239,10 +247,12 @@ export default class WebController extends MvController {
                         input.select()
                     })
                 } else {
-                    input.type = 'text'
-                    input.addEventListener('keydown', (e) => {
-                        e.cancelBubble = true
-                    })
+                    if(type === 'input') {
+                        input.type = 'text'
+                        input.addEventListener('keydown', (e) => {
+                            e.cancelBubble = true
+                        })
+                    }
                     if (!propertiesConfig['editable']) {
                         input.disabled = true
                     }

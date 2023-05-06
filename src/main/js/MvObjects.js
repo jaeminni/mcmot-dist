@@ -1,6 +1,7 @@
 import ImageGeometry from "./ImageGeometry";
 import * as THREE from "three";
 import * as martinez from 'martinez-polygon-clipping'
+import {ShapeUtils} from "three";
 
 class MvOptions {
     static offset = 100
@@ -32,6 +33,52 @@ class MvOptions {
     static useClip = true
 }
 
+class MvMesh {
+    children = []
+
+    constructor() {
+    }
+
+    add = (container) => {
+
+    }
+
+    remove = (container) => {
+
+    }
+
+    dispose = (container) => {
+
+    }
+}
+
+class MvPolygon extends MvMesh {
+    constructor() {
+        super();
+    }
+}
+
+class MvBox extends MvMesh {
+    constructor(box) {
+        super();
+
+    }
+}
+
+
+class MvVParallelogram extends MvMesh {
+    constructor() {
+        super();
+    }
+}
+
+class MvCuboid extends MvMesh {
+    constructor(main, side) {
+        super();
+
+    }
+}
+
 class MvObject {
     constructor(parent, data, prev) {
         this.parent = parent
@@ -41,7 +88,7 @@ class MvObject {
 
         if (data_mapper['to_json']) {
             for (const to_json of data_mapper['to_json']) {
-                if(data[to_json]) {
+                if (data[to_json]) {
                     data[to_json] = JSON.stringify(data[to_json], null, 2)
                 }
             }
@@ -77,7 +124,7 @@ class MvObject {
 
         if (data_mapper['to_json']) {
             for (const to_json of data_mapper['to_json']) {
-                if(object[to_json]) {
+                if (object[to_json]) {
                     object[to_json] = JSON.parse(object[to_json])
                 }
             }
@@ -85,7 +132,7 @@ class MvObject {
 
         if (data_mapper['to_int']) {
             for (const to_int of data_mapper['to_int']) {
-                if(object[to_int]) {
+                if (object[to_int]) {
                     object[to_int] = Number(object[to_int])
                 }
             }
@@ -128,30 +175,9 @@ class MvObject {
         return this.has_errors ? MvOptions.has_errors : this.properties[MvOptions.id_name] ? MvOptions.color : MvOptions.no_id
     }
 
-    is_clockwise(points) {
-        const center = [0, 0]
-        points.forEach(p => {
-            center[0] += p[0]
-            center[1] += p[1]
-        })
-        center[0] /= points.length
-        center[1] /= points.length
-
-        const angles = points.map(p => {
-            const angle = Math.atan2(center[1] - p[1], p[0] - center[0]) * 180 / Math.PI
-            return angle < 0 ? angle + 360 : angle
-        })
-
-        return angles[0] > angles[1]
-    }
-
     get_shape(clip, shapes, all_points, face) {
         let ps
         if (MvOptions.useClip) {
-            const is_clockwise = this.is_clockwise(face)
-            if (!is_clockwise) {
-                face.reverse()
-            }
             const inter = martinez.intersection(clip, [[[...face, face[0]]]])
 
             if (!inter || inter.length === 0) {
@@ -210,6 +236,8 @@ class MvObject {
 
         this.mesh = new THREE.Mesh(geometry, material)
         gl_container.add(this.mesh)
+        this.points = new THREE.Points(geometry, new THREE.PointsMaterial({color: 0x00ff00}))
+        gl_container.add(this.points)
 
         // const bufferAttribute = geometry.getAttribute('position')
         // const points = new THREE.Points(geometry, new THREE.PointsMaterial({size: 1.5}));
@@ -230,6 +258,12 @@ class MvObject {
             this.mesh.geometry.dispose()
             this.mesh.material.dispose()
             this.mesh = null
+        }
+        if (this.points) {
+            gl_container.remove(this.points)
+            this.points.geometry.dispose()
+            this.points.material.dispose()
+            this.points = null
         }
         this.elem = null
         this.cell = null
@@ -317,7 +351,7 @@ class MvCamera {
     }
 
     internal_save() {
-        const file  = {}
+        const file = {}
         file['filename'] = this.filename
         const key_objects = data_mapper['key_objects']
         file[key_objects] = this.objects.map(object => object.toObject())

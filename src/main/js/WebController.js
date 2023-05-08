@@ -17,12 +17,12 @@ export default class WebController extends MvController {
     get_count_length() {
         let length = propertiesConfig['frame-index-length'] | 3
         length = Number(length)
-        if(Number.isNaN(length)) {
+        if (Number.isNaN(length)) {
             length = 3
         }
 
         let prefix = ''
-        for(let i = 0; i < length; ++i) {
+        for (let i = 0; i < length; ++i) {
 
         }
     }
@@ -107,7 +107,7 @@ export default class WebController extends MvController {
             camera_object.cell = camera_div
             const title = document.createElement('div')
             title.classList.add('title')
-            if(camera_object.json_error) {
+            if (camera_object.json_error) {
                 title.classList.add('error')
             }
             title.textContent = frame.cameras[camera].name
@@ -118,7 +118,9 @@ export default class WebController extends MvController {
                 const object_div = document.createElement('div')
                 object.cell = object_div
                 object_div.classList.add('object')
-                if (object.has_errors) {
+                if (object.properties.deleted) {
+                    object_div.classList.add('deleted')
+                } else if (object.has_errors) {
                     object_div.classList.add('has-errors')
                 }
                 const count_str = ('0' + ++count).slice(-2)
@@ -197,19 +199,34 @@ export default class WebController extends MvController {
                 table.appendChild(tr)
                 const label = document.createElement('td')
                 label.textContent = key
+                tr.appendChild(label)
+
+                if (key === 'deleted') {
+                    const td = document.createElement('td')
+                    const input = document.createElement('input')
+                    input.type = 'checkbox'
+                    input.checked = object.properties[key]
+
+                    input.addEventListener('change', (e) => {
+                        application.changeProperty(object, key, input.checked)
+                    })
+                    td.appendChild(input)
+                    tr.appendChild(td)
+                    continue
+                }
+
                 if (object.errors[key]) {
                     label.classList.add('has-errors')
                 }
-                tr.appendChild(label)
 
                 const td = document.createElement('td')
                 let type = 'input'
-                if(key === 'blobs') {
+                if (key === 'blobs') {
                     type = 'textarea'
                 }
                 const input = document.createElement(type)
                 input.value = object.properties[key]
-                if(type === 'textarea') {
+                if (type === 'textarea') {
                     input.style.width = '138px'
                     input.style.height = '150px'
                 }
@@ -247,7 +264,7 @@ export default class WebController extends MvController {
                         input.select()
                     })
                 } else {
-                    if(type === 'input') {
+                    if (type === 'input') {
                         input.type = 'text'
                         input.addEventListener('keydown', (e) => {
                             e.cancelBubble = true

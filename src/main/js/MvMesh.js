@@ -47,8 +47,10 @@ class MvMesh {
 
 
 class MvBox extends MvMesh {
-    constructor(object) {
+    constructor(object, parent) {
         super()
+        this.parent = parent
+
         this.geometry = get_box_geometry(object)
         this.material = get_material()
 
@@ -159,6 +161,23 @@ class MvBox extends MvMesh {
     move_end = () => {
         this.geometry.computeBoundingBox()
         this.geometry.computeBoundingSphere()
+
+        if (this.group && this.gl_container) {
+            const array = this.geometry.attributes.position.array
+            const position = []
+            for (let i = 0; i < 4; ++i) {
+                let v = new THREE.Vector3(array[i * 3], array[i * 3 + 1], array[i * 3 + 2])
+                v = this.group.localToWorld(v)
+                v = this.gl_container.worldToLocal(v)
+                position.push(v)
+            }
+
+            const v1 = position[2]
+            const v2 = position[3]
+            position[2] = v2
+            position[3] = v1
+            this.parent.move_end(position)
+        }
     }
 
     array = new Float32Array(12)

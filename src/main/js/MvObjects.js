@@ -27,6 +27,7 @@ class MvOptions {
     static emissive = 0x000000
     static select = 0xff00ff
     static hover = 0x00f000
+    static deleted = 0xaaaaaa
     static no_id = 0xff0000
     static has_errors = 0xffffff
     static id_name = 'id'
@@ -36,9 +37,11 @@ class MvOptions {
 
 class MvObject {
     static epsilon = 0.0005
+    static pre_data = {}
 
-    constructor(parent, data, prev) {
+    constructor(parent, data, prev, index) {
         this.parent = parent
+        this.index = index
 
         prev && (prev.next = this)
         this.prev = prev
@@ -51,7 +54,13 @@ class MvObject {
             }
         }
 
+        if (!data.hasOwnProperty('deleted')) {
+            data.deleted = false
+        }
+
         this.data = data
+        this.moved = false
+
         const track_id = data[MvOptions.id_name] || null
 
         data[MvOptions.id_name] = track_id
@@ -69,11 +78,59 @@ class MvObject {
 
         this.properties = properties
         this.errors = {}
+
+        // const mv_id = this.get_id()
+        // const pre_data = MvObject.pre_data[mv_id]
+        // if (pre_data) {
+        //     if (pre_data.faces) {
+        //         this.faces = pre_data.faces
+        //     }
+        //     this.deleted = !!pre_data.deleted
+        // }
+    }
+
+    // save_position = (position) => {
+    //     const mv_id = this.get_id()
+    //     const pre_data = MvObject.pre_data[mv_id]
+    //
+    //     if (pre_data) {
+    //         pre_data.faces = position
+    //     } else {
+    //         MvObject.pre_data[mv_id] = {faces: position}
+    //     }
+    // }
+    //
+    // save_deleted = () => {
+    //     const mv_id = this.get_id()
+    //     const pre_data = MvObject.pre_data[mv_id]
+    //
+    //     if (pre_data) {
+    //         pre_data.deleted = this.deleted
+    //     } else {
+    //         MvObject.pre_data[mv_id] = {deleted: this.deleted}
+    //     }
+    // }
+
+    get_id = () => {
+        return `${this.parent.get_id()}-${this.index}`
     }
 
     toObject = () => {
+        this.moved = false
         const object = {}
+
         object['geometry'] = this.faces
+        // const mv_id = this.get_id()
+        // const pre_data = MvObject.pre_data[mv_id]
+        // if (pre_data) {
+        //     if (pre_data.faces) {
+        //         object['geometry'] = pre_data.faces
+        //     }
+        //     if (!pre_data.deleted) {
+        //         object['deleted'] = true
+        //     }
+        // }
+
         if (this.hasOwnProperty('wheels')) {
             object['wheels'] = this.wheels
         }
@@ -100,6 +157,10 @@ class MvObject {
     }
 
     isPropertyChanged = () => {
+        if (this.moved) {
+            return true
+        }
+
         for (const key in this.properties) {
             if (this.data[key] !== this.properties[key]) {
                 return true
@@ -129,6 +190,9 @@ class MvObject {
     has_errors
 
     get_color = () => {
+        if (this.properties.deleted) {
+            return MvOptions.deleted
+        }
         return this.has_errors ? MvOptions.has_errors : this.properties[MvOptions.id_name] ? MvOptions.color : MvOptions.no_id
     }
 
@@ -176,6 +240,11 @@ class MvObject {
         return flat
     }
 
+    move_end = (position) => {
+        // this.save_position(position.map(v => [v.x, v.y]))
+        this.faces = position.map(v => [v.x, v.y])
+        this.moved = true
+    }
 
     create_mesh = (clip, gl_container, web_container) => {
         const shapes = []
@@ -196,7 +265,7 @@ class MvObject {
 
         this.mv_mesh = null
         const is_box = this.is_box(all_points)
-        if (is_box) {
+        if (data_mapper.editable && is_box) {
             const object = {
                 x: all_points[0].x,
                 y: all_points[0].y,
@@ -204,7 +273,7 @@ class MvObject {
                 height: all_points[2].y - all_points[0].y
             }
 
-            this.mv_mesh = new MvBox(object)
+            this.mv_mesh = new MvBox(object, this)
             this.mv_mesh.add(gl_container)
             label_point = all_points[0]
         } else {
@@ -280,7 +349,7 @@ class MvObject {
                     target = this.mv_mesh.select(controls)
                     break
             }
-            if(target) {
+            if (target) {
                 return {object: this, target}
             }
         }
@@ -342,11 +411,12 @@ class MvCamera {
         this.objects = []
         this.json_error = false
         ++MvCamera.json_count
+        let index = 0;
         fetch(this.json_path).then(res => res.json()).then(data => {
             this.filename = data['filename']
             prev = null
             for (const object of data[data_mapper['key_objects']]) {
-                this.objects.push(prev = new MvObject(this, object, prev))
+                this.objects.push(prev = new MvObject(this, object, prev, ++index))
             }
             this.objects.length > 0 && (this.first_object = this.objects[0])
         }).catch(e => {
@@ -362,6 +432,10 @@ class MvCamera {
         this.layout = MvOptions.layout[name] || (() => {
             return [0, 0]
         })
+    }
+
+    get_id = () => {
+        return `${this.parent.get_id()}-${this.name}`
     }
 
     internal_save() {
@@ -483,6 +557,10 @@ class MvFrame {
         for (const camera in cameras) {
             prev = this.cameras[camera] = new MvCamera(this, camera, cameras[camera], prev)
         }
+    }
+
+    get_id = () => {
+        return `${this.parent.get_id()}-${this.name}`
     }
 
     save = (forced) => {
@@ -638,6 +716,10 @@ class MvScene {
         }
     }
 
+    get_id = () => {
+        return this.name
+    }
+
     save = (forced) => {
         let needSave = false
         for (const frame in this.frames) {
@@ -676,6 +758,8 @@ class MvProject {
     static REGEX = /camera_(front|rear)_(left|center|right)_(forward|backward)_fov(60|100).*\/SCENE-(\w+)-(\d+)_FRAME_(\d+)\.(json|jpg|png)$/i
 
     constructor(files) {
+        MvObject.pre_data = {}
+
         const scenes = {}
         MvCamera.json_count = 0
         for (const file of files) {
@@ -707,4 +791,4 @@ class MvProject {
     }
 }
 
-export {MvOptions, MvCamera, MvFrame, MvScene, MvProject}
+export {MvOptions, MvObject, MvCamera, MvFrame, MvScene, MvProject}

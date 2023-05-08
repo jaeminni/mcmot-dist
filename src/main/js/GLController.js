@@ -224,7 +224,7 @@ export default class GLController extends MvController {
     select = (controls, event) => {
         if (this.frame) {
             for (const _camera in this.frame.cameras) {
-                const {camera, object} = this.frame.cameras[_camera].raycast(controls)
+                const {camera, object} = this.frame.cameras[_camera].raycast(controls, 'select')
                 if (camera || object) {
                     this.application.select_camera(camera)
                     this.application.select_object(object)

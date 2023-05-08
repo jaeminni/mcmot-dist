@@ -106,6 +106,15 @@ class MvApplication extends MvController {
         this.controllers.forEach(controller => controller.dehover_object(object))
         this.hovered_object = null
     }
+
+    new_object = () => {
+        if (data_mapper.editable && this.selected_camera) {
+            this.selected_camera.new_object(this.selected_object)
+            // this.deselect_frame(this.frame)
+            this.select_frame(this.frame)
+        }
+    }
+
     select_camera = (camera) => {
         if (this.selected_camera === camera) {
             return
@@ -119,6 +128,7 @@ class MvApplication extends MvController {
         this.controllers.forEach(controller => controller.deselect_camera(camera))
         this.selected_camera = null
     }
+
     select_object = (object) => {
         if (this.selected_object === object) {
             return

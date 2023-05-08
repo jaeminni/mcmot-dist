@@ -115,8 +115,7 @@ class MvObject {
         return `${this.parent.get_id()}-${this.index}`
     }
 
-    toObject = () => {
-        this.moved = false
+    toObject = (update = true) => {
         const object = {}
 
         object['geometry'] = this.faces
@@ -152,7 +151,10 @@ class MvObject {
             }
         }
 
-        Object.assign(this.data, this.properties)
+        if (update) {
+            this.moved = false
+            Object.assign(this.data, this.properties)
+        }
         return object
     }
 
@@ -411,12 +413,12 @@ class MvCamera {
         this.objects = []
         this.json_error = false
         ++MvCamera.json_count
-        let index = 0;
+        this.index = 0;
         fetch(this.json_path).then(res => res.json()).then(data => {
             this.filename = data['filename']
-            prev = null
+            this.prev = null
             for (const object of data[data_mapper['key_objects']]) {
-                this.objects.push(prev = new MvObject(this, object, prev, ++index))
+                this.objects.push(this.prev = new MvObject(this, object, this.prev, ++this.index))
             }
             this.objects.length > 0 && (this.first_object = this.objects[0])
         }).catch(e => {
@@ -432,6 +434,19 @@ class MvCamera {
         this.layout = MvOptions.layout[name] || (() => {
             return [0, 0]
         })
+    }
+
+    new_object = (object) => {
+        console.log('new_object', object)
+        let data = data_mapper.new_object
+        if (object) {
+            data = JSON.parse(JSON.stringify(object.toObject(false)))
+            for(const p of data.geometry) {
+                p[0] += 20
+                p[1] += 20
+            }
+        }
+        this.objects.push(this.prev = new MvObject(this, data, this.prev, ++this.index))
     }
 
     get_id = () => {

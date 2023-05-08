@@ -3,7 +3,7 @@ export default class KeyController {
         this.application = application
         component.addEventListener("keydown", (event) => {
             console.log(event)
-            if(event.getModifierState("Accel")) {
+            if (event.getModifierState("Accel")) {
                 switch (event.code) {
                     case 'KeyS': {
                         request_save_project(event.getModifierState("Shift"))
@@ -12,6 +12,9 @@ export default class KeyController {
                     case 'KeyO': {
                         request_open_project()
                         break
+                    }
+                    case 'KeyN': {
+                        this.application.new_object()
                     }
                 }
                 return

@@ -1,6 +1,8 @@
 import {MvController} from "./MvApplication";
 import ImageControls from "./ImageControls";
 import * as THREE from "three";
+import {SelectMesh} from "./SelectGeometry";
+import {MvOptions} from "./MvObjects";
 
 export default class GLController extends MvController {
     constructor(application, canvas, labels) {
@@ -19,13 +21,100 @@ export default class GLController extends MvController {
         gl_scene.add(new THREE.AmbientLight(0xffffff))
         this.gl_group = new THREE.Group()
         gl_scene.add(this.gl_group)
+        this.gl_select = new THREE.Group()
+        gl_scene.add(this.gl_select)
 
         this.create_camera()
 
         this.controls = new ImageControls(this.camera, canvas)
-        this.controls.update = this.render
         this.texture_loader = new THREE.TextureLoader()
 
+        this.update()
+    }
+
+
+    moved = false
+    mouse_move = (control, event) => {
+        this.moved = true
+        switch (this.move_mode) {
+            case 'object_select':
+                this.select_mesh.update(control.origin, control.target_pointer)
+                break
+            case 'object_move':
+                this.intersects.forEach(intersect => {
+                    const object = intersect.object
+                    const index = intersect.index
+
+                    object.move(index, control, event)
+                })
+                break
+        }
+
+        this.update()
+    }
+
+    move_mode = null
+    select_mesh = null
+    intersects = []
+    origin = new THREE.Vector3()
+    offset = new THREE.Vector3()
+
+    start_select = (control, event) => {
+        this.select_mesh = new SelectMesh(control.origin)
+        this.gl_select.add(this.select_mesh)
+    }
+
+    end_select = (control, event) => {
+        this.gl_select.remove(this.select_mesh)
+        this.select_mesh.dispose()
+        this.select_mesh = null
+    }
+
+    mouse_down = (controls, event) => {
+        this.moved = false
+        this.move_mode = null
+        let selected
+        if (!MvOptions.useClip) {
+            if (this.frame) {
+                for (const _camera in this.frame.cameras) {
+                    const {camera, object, target} = this.frame.cameras[_camera].raycast(controls, 'select')
+                    if(target) {
+                        selected = target
+                        console.log('target', target)
+                        break
+                    }
+                }
+            }
+        }
+
+        if (selected) {
+            this.move_mode = 'object_move'
+            this.intersects = [selected]
+        } else {
+            // this.move_mode = 'object_select'
+            // console.log('object_select')
+            // this.start_select(controls, event)
+        }
+        this.update()
+    }
+
+    mouse_up = (controls, event) => {
+        if (!this.moved) {
+            this.select(controls, event)
+            return
+        }
+        switch (this.move_mode) {
+            case 'object_select':
+                this.end_select(controls, event)
+                break
+            case 'object_move':
+                this.intersects.forEach(intersect => {
+                    const object = intersect.object
+                    object.move_end()
+                })
+                break
+        }
+        this.move_mode = null
         this.update()
     }
 
@@ -118,10 +207,10 @@ export default class GLController extends MvController {
         this.update()
     }
 
-    hover = (raycaster) => {
+    hover = (controls, event) => {
         if (this.frame) {
             for (const _camera in this.frame.cameras) {
-                const {camera, object} = this.frame.cameras[_camera].raycast(raycaster)
+                const {camera, object} = this.frame.cameras[_camera].raycast(controls, 'hover')
 
                 if (camera || object) {
                     this.application.hover_object(object)
@@ -132,10 +221,10 @@ export default class GLController extends MvController {
         }
     }
 
-    select = (raycaster, event) => {
+    select = (controls, event) => {
         if (this.frame) {
             for (const _camera in this.frame.cameras) {
-                const {camera, object} = this.frame.cameras[_camera].raycast(raycaster)
+                const {camera, object} = this.frame.cameras[_camera].raycast(controls)
                 if (camera || object) {
                     this.application.select_camera(camera)
                     this.application.select_object(object)
@@ -155,8 +244,11 @@ export default class GLController extends MvController {
             frame.cameras[camera].create_mesh(this.gl_group, this.labels, this.update)
         }
         this.frame = frame
+        this.controls.update = this.update
         this.controls.hover = this.hover
-        this.controls.select = this.select
+        this.controls.mouse_move = this.mouse_move
+        this.controls.mouse_down = this.mouse_down
+        this.controls.mouse_up = this.mouse_up
         this.update()
     }
     deselect_frame = (frame) => {
@@ -168,8 +260,11 @@ export default class GLController extends MvController {
         }
         this.labels.innerHTML = ''
         this.frame = null
+        this.controls.update = null
         this.controls.hover = null
-        this.controls.select = null
+        this.controls.mouse_move = null
+        this.controls.mouse_down = null
+        this.controls.mouse_up = null
         this.update()
     }
     hover_object = (object) => {

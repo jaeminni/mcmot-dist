@@ -18,6 +18,10 @@ window.WebController = WebController
 
 window.KeyController = KeyController
 
+import {MvMesh} from "./MvMesh";
+
+window.MvMesh = MvMesh
+
 import * as THREE from 'three'
 
 window.THREE = THREE

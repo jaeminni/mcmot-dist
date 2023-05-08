@@ -1,4 +1,6 @@
 import * as THREE from 'three'
+import {Vector3} from "three";
+import {MvMesh} from "./MvMesh";
 
 
 const STATE = {
@@ -18,12 +20,15 @@ export default class ImageControls {
 
         this.state = STATE.NONE
         this.raycaster = new THREE.Raycaster()
+        this.origin = new THREE.Vector3()
         this.mouse_pointer = new THREE.Vector3()
         this.target_pointer = new THREE.Vector3()
         this.plane = new THREE.Plane()
         camera.getWorldDirection(this.plane.normal)
 
         this.injection()
+
+        this.update_dpi()
     }
 
     injection = () => {
@@ -59,30 +64,29 @@ export default class ImageControls {
             return
         }
 
-        if (this.hover) {
-            this.updateRaycaster(event)
-            this.hover(this.raycaster, event)
-        }
-
         switch (this.state) {
             case STATE.PAN:
                 this.pan(event)
                 break
             case STATE.MOVE:
-                this.move(event)
+                if (this.mouse_move) {
+                    this.updateTargetPointer(event)
+                    this.mouse_move(this, event)
+                }
                 break
             default:
+                if (this.hover) {
+                    this.updateTargetPointer(event)
+                    this.hover(this, event)
+                }
         }
     }
 
-    move = (event) => {
-        return true
-    }
-
-    select // (event, offset)
-    hover
-
     update
+    hover
+    mouse_move
+    mouse_down
+    mouse_up
 
     pan = (event) => {
         this.calOffset(event)
@@ -95,7 +99,6 @@ export default class ImageControls {
         return this.target_pointer.sub(this.origin)
     }
 
-    origin = new THREE.Vector3()
     onMouseDown = (event) => {
         if (this.enabled === false) {
             return
@@ -109,6 +112,9 @@ export default class ImageControls {
                 break
             case THREE.MOUSE.LEFT:
                 this.state = STATE.MOVE
+                if (this.mouse_down) {
+                    this.mouse_down(this, event)
+                }
         }
     }
 
@@ -119,9 +125,9 @@ export default class ImageControls {
 
         switch (this.state) {
             case STATE.MOVE:
-                if (this.select) {
+                if (this.mouse_up) {
                     this.updateRaycaster(event)
-                    this.select(this.raycaster, event)
+                    this.mouse_up(this, event)
                 }
         }
 
@@ -133,16 +139,16 @@ export default class ImageControls {
             return
         }
 
-        this.zoom(event, event.deltaY < 0 ? 1 : -1)
+        this.zoom(event, event.deltaY < 0 ? -1 : 1)
     }
 
     ZOOM_SCALE_SPEED = 0.1
     zoom = (event, direction) => {
         this.updateRaycaster(event);
         this.target_pointer.copy(this.raycaster.ray.direction)
-            .multiplyScalar(Math.abs(this.camera.position.z) * this.ZOOM_SCALE_SPEED * direction)
+            .multiplyScalar(this.camera.position.z * this.ZOOM_SCALE_SPEED * direction)
         this.addCameraPosition(this.target_pointer)
-
+        this.update_dpi()
         this.update && this.update()
     }
 
@@ -168,5 +174,19 @@ export default class ImageControls {
         this.mouse_pointer.y = -(event.clientY - rect.top) / rect.height * 2 + 1
 
         this.raycaster.setFromCamera(this.mouse_pointer, this.camera)
+    }
+
+    update_dpi = () => {
+        this.raycaster.setFromCamera({x: 0, y: 1}, this.camera)
+        const top = new Vector3()
+        this.raycaster.ray.intersectPlane(this.plane, top)
+        this.raycaster.setFromCamera({x: 0, y: -1}, this.camera)
+        const bottom = new Vector3()
+        this.raycaster.ray.intersectPlane(this.plane, bottom)
+
+        const rect = this.canvas.getBoundingClientRect()
+
+        this.dpi = Math.abs(top.y - bottom.y) / rect.height
+        this.raycaster.params.Points.threshold = MvMesh.point_size / 2 * this.dpi
     }
 }

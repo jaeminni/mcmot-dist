@@ -2,6 +2,7 @@ import ImageGeometry from "./ImageGeometry";
 import * as THREE from "three";
 import * as martinez from 'martinez-polygon-clipping'
 import {ShapeUtils} from "three";
+import {MvBox} from "./MvMesh";
 
 class MvOptions {
     static offset = 100
@@ -33,53 +34,9 @@ class MvOptions {
     static useClip = true
 }
 
-class MvMesh {
-    children = []
-
-    constructor() {
-    }
-
-    add = (container) => {
-
-    }
-
-    remove = (container) => {
-
-    }
-
-    dispose = (container) => {
-
-    }
-}
-
-class MvPolygon extends MvMesh {
-    constructor() {
-        super();
-    }
-}
-
-class MvBox extends MvMesh {
-    constructor(box) {
-        super();
-
-    }
-}
-
-
-class MvVParallelogram extends MvMesh {
-    constructor() {
-        super();
-    }
-}
-
-class MvCuboid extends MvMesh {
-    constructor(main, side) {
-        super();
-
-    }
-}
-
 class MvObject {
+    static epsilon = 0.0005
+
     constructor(parent, data, prev) {
         this.parent = parent
 
@@ -198,6 +155,28 @@ class MvObject {
         all_points.push(...points)
     }
 
+    is_equals(v1, v2) {
+        return Math.abs(v1 - v2) < MvObject.epsilon
+    }
+
+    is_flat(p1, p2) {
+        return this.is_equals(p1.x, p2.x) || this.is_equals(p1.y, p2.y)
+    }
+
+    is_box(points) {
+        if (points.length !== 4) {
+            return false
+        }
+
+        let flat = true
+        for (let i = 0; i < 4; ++i) {
+            flat &&= this.is_flat(points[i], points[(i + 1) % 4])
+        }
+
+        return flat
+    }
+
+
     create_mesh = (clip, gl_container, web_container) => {
         const shapes = []
         const all_points = []
@@ -214,34 +193,50 @@ class MvObject {
         }
 
         let label_point
-        all_points.sort((a, b) => {
-            return a.x - b.x
-        })
-        if (all_points[0].y <= all_points[1].y) {
+
+        this.mv_mesh = null
+        const is_box = this.is_box(all_points)
+        if (is_box) {
+            const object = {
+                x: all_points[0].x,
+                y: all_points[0].y,
+                width: all_points[2].x - all_points[0].x,
+                height: all_points[2].y - all_points[0].y
+            }
+
+            this.mv_mesh = new MvBox(object)
+            this.mv_mesh.add(gl_container)
             label_point = all_points[0]
         } else {
-            label_point = all_points[1]
+            all_points.sort((a, b) => {
+                return a.x - b.x
+            })
+            if (all_points[0].y <= all_points[1].y) {
+                label_point = all_points[0]
+            } else {
+                label_point = all_points[1]
+            }
+
+            const geometry = new THREE.ShapeGeometry(shapes);
+            const material = new THREE.MeshPhongMaterial({
+                side: THREE.BackSide,
+                depthWrite: false,
+                opacity: MvOptions.opacity,
+                transparent: true,
+                wireframe: false,
+                color: this.get_color(),
+                emissive: MvOptions.emissive
+            });
+
+            this.mesh = new THREE.Mesh(geometry, material)
+            gl_container.add(this.mesh)
+            this.points = new THREE.Points(geometry, new THREE.PointsMaterial({color: 0x00ff00}))
+            gl_container.add(this.points)
+
+            // const bufferAttribute = geometry.getAttribute('position')
+            // const points = new THREE.Points(geometry, new THREE.PointsMaterial({size: 1.5}));
+            // gl_container.add(points)
         }
-
-        const geometry = new THREE.ShapeGeometry(shapes);
-        const material = new THREE.MeshPhongMaterial({
-            side: THREE.BackSide,
-            depthWrite: false,
-            opacity: MvOptions.opacity,
-            transparent: true,
-            wireframe: false,
-            color: this.get_color(),
-            emissive: MvOptions.emissive
-        });
-
-        this.mesh = new THREE.Mesh(geometry, material)
-        gl_container.add(this.mesh)
-        this.points = new THREE.Points(geometry, new THREE.PointsMaterial({color: 0x00ff00}))
-        gl_container.add(this.points)
-
-        // const bufferAttribute = geometry.getAttribute('position')
-        // const points = new THREE.Points(geometry, new THREE.PointsMaterial({size: 1.5}));
-        // gl_container.add(points)
 
         const elem = document.createElement('div');
         let position = new THREE.Vector3(label_point.x, label_point.y, 0);
@@ -253,6 +248,10 @@ class MvObject {
     }
 
     dispose = (gl_container, web_container) => {
+        if (this.mv_mesh) {
+            this.mv_mesh.dispose(gl_container)
+            this.mv_mesh = null
+        }
         if (this.mesh) {
             gl_container.remove(this.mesh)
             this.mesh.geometry.dispose()
@@ -269,16 +268,31 @@ class MvObject {
         this.cell = null
     }
 
-    raycast = (raycaster) => {
-        if (!this.mesh) {
-            return
+    raycast = (controls, type) => {
+        const raycaster = controls.raycaster
+        if (this.mv_mesh) {
+            let target
+            switch (type) {
+                case 'hover':
+                    target = this.mv_mesh.hover(controls)
+                    break
+                case 'select':
+                    target = this.mv_mesh.select(controls)
+                    break
+            }
+            if(target) {
+                return {object: this, target}
+            }
+        }
+        if (this.mesh) {
+            const intersects = []
+            this.mesh.raycast(raycaster, intersects);
+            if (intersects.length > 0) {
+                return {object: this}
+            }
         }
 
-        const intersects = []
-        this.mesh.raycast(raycaster, intersects);
-        if (intersects.length > 0) {
-            return this
-        }
+        return {}
     }
 
     select = () => {
@@ -432,19 +446,19 @@ class MvCamera {
         callback && callback()
     }
 
-    raycast = (raycaster) => {
+    raycast = (controls, type) => {
+        const raycaster = controls.raycaster
         if (!this.mesh) {
-            return
+            return {}
         }
 
         const intersects = []
         this.mesh.raycast(raycaster, intersects);
         if (intersects.length > 0) {
-            intersects.length = 0
-            for (const object of this.objects) {
-                const _object = object.raycast(raycaster, intersects)
-                if (_object) {
-                    return {camera: this, object: _object}
+            for (const _object of this.objects) {
+                const {object, target} = _object.raycast(controls, type)
+                if (object) {
+                    return {camera: this, object, target}
                 }
             }
             return {camera: this}

@@ -4,6 +4,18 @@ import * as martinez from 'martinez-polygon-clipping'
 import {ShapeUtils} from "three";
 import {MvBox} from "./MvMesh";
 
+function merge(rect1, rect2) {
+    return [
+        [Math.min(rect1[0][0], rect2[0][0]), Math.min(rect1[0][1], rect2[0][1])],
+        [Math.max(rect1[1][0], rect2[1][0]), Math.max(rect1[1][1], rect2[1][1])]
+    ]
+}
+
+function contains(rect, point) {
+    return !((rect[0][0] - MvMesh.point_size) > point.x || (rect[1][0] + MvMesh.point_size) < point.x
+        || (rect[0][1] - MvMesh.point_size) > point.y || (rect[1][1] + MvMesh.point_size) < point.y)
+}
+
 class MvOptions {
     static offset = 100
     static layout = {
@@ -246,11 +258,26 @@ class MvObject {
         // this.save_position(position.map(v => [v.x, v.y]))
         this.faces = position.map(v => [v.x, v.y])
         this.moved = true
+
+        this.compute_rect()
+        this.parent.update_rect(this.rect)
+    }
+
+    compute_rect = () => {
+        this.rect = [[100000, 100000], [-100000, -100000]]
+
+        for (const p of this.faces) {
+            this.rect = merge(this.rect, [p, p])
+        }
     }
 
     create_mesh = (clip, gl_container, web_container) => {
         if (this.properties.deleted) {
             return
+        }
+
+        if (data_mapper.editable) {
+            this.compute_rect()
         }
 
         const shapes = []
@@ -440,6 +467,10 @@ class MvCamera {
         })
     }
 
+    update_rect = (rect) => {
+        this.rect = merge(this.rect, rect)
+        console.log('update_rect', this.rect)
+    }
     new_object = (object) => {
         console.log('new_object', object)
         let data = data_mapper.new_object
@@ -520,7 +551,13 @@ class MvCamera {
 
             const clip = [[[0, 0], [width, 0], [width, height], [0, height], [0, 0]]]
 
-            this.objects.forEach(object => object.create_mesh(clip, this.mesh, web_container))
+            this.rect = [[0, 0], [width, height]]
+            this.objects.forEach(object => {
+                object.create_mesh(clip, this.mesh, web_container)
+                if (data_mapper.editable) {
+                    this.rect = merge(this.rect, object.rect)
+                }
+            })
             callback && callback()
         })
     }
@@ -545,9 +582,8 @@ class MvCamera {
             return {}
         }
 
-        const intersects = []
-        this.mesh.raycast(raycaster, intersects);
-        if (intersects.length > 0) {
+        const target = this.mesh.worldToLocal(controls.target_pointer)
+        if (contains(this.rect, target)) {
             for (const _object of this.objects) {
                 const {object, target} = _object.raycast(controls, type)
                 if (object) {
@@ -556,6 +592,19 @@ class MvCamera {
             }
             return {camera: this}
         }
+
+        // const intersects = []
+        // this.mesh.raycast(raycaster, intersects);
+        // if (intersects.length > 0) {
+        //     for (const _object of this.objects) {
+        //         const {object, target} = _object.raycast(controls, type)
+        //         if (object) {
+        //             return {camera: this, object, target}
+        //         }
+        //     }
+        //     return {camera: this}
+        // }
+
         return {}
     }
 

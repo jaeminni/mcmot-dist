@@ -27,7 +27,7 @@ class MvOptions {
     static emissive = 0x000000
     static select = 0xff00ff
     static hover = 0x00f000
-    static deleted = 0xaaaaaa
+    static deleted = 0x555555
     static no_id = 0xff0000
     static has_errors = 0xffffff
     static id_name = 'id'
@@ -249,6 +249,10 @@ class MvObject {
     }
 
     create_mesh = (clip, gl_container, web_container) => {
+        if (this.properties.deleted) {
+            return
+        }
+
         const shapes = []
         const all_points = []
         if (Array.isArray(this.faces)) {
@@ -441,7 +445,7 @@ class MvCamera {
         let data = data_mapper.new_object
         if (object) {
             data = JSON.parse(JSON.stringify(object.toObject(false)))
-            for(const p of data.geometry) {
+            for (const p of data.geometry) {
                 p[0] += 20
                 p[1] += 20
             }

@@ -62,6 +62,12 @@ class MvApplication extends MvController {
         });
     }
 
+    export = () => {
+        if (this.project) {
+            return this.project.export()
+        }
+    }
+
     new_project = (project) => {
         this.project && this.dispose_project(this.project)
         if (project) {

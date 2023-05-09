@@ -440,6 +440,7 @@ class MvCamera {
 
         this.image_path = path.image
         this.json_path = path.json
+        this.relative_path = path.relative_path
 
         this.objects = []
         this.json_error = false
@@ -468,7 +469,10 @@ class MvCamera {
     }
 
     update_rect = (rect) => {
-        this.rect = merge(this.rect, rect)
+        this.rect = [[0, 0], [this.width, this.height]]
+        this.objects.forEach(object => {
+            this.rect = merge(this.rect, object.rect)
+        })
         console.log('update_rect', this.rect)
     }
     new_object = (object) => {
@@ -486,6 +490,28 @@ class MvCamera {
 
     get_id = () => {
         return `${this.parent.get_id()}-${this.name}`
+    }
+
+    export = () => {
+        const content = {}
+        content['filename'] = this.filename
+        const key_objects = data_mapper['key_objects']
+        content[key_objects] = []
+
+        for (const object of this.objects) {
+            const o = object.toObject(false)
+            const deleted = o.deleted
+            delete o.deleted
+
+            if (!deleted) {
+                content[key_objects].push(o)
+            }
+        }
+
+        return {
+            relative_path: this.relative_path,
+            content
+        }
     }
 
     internal_save() {
@@ -534,6 +560,9 @@ class MvCamera {
             const height = texture.image.naturalHeight
             const offset = this.layout(width, height)
 
+            this.width = width
+            this.height = height
+
             const geometry = new ImageGeometry(width, height);
             const material = new THREE.MeshBasicMaterial({
                 map: texture, depthWrite: false
@@ -576,14 +605,18 @@ class MvCamera {
         callback && callback()
     }
 
+
+    target = new THREE.Vector3()
     raycast = (controls, type) => {
         const raycaster = controls.raycaster
         if (!this.mesh) {
             return {}
         }
 
-        const target = this.mesh.worldToLocal(controls.target_pointer)
-        if (contains(this.rect, target)) {
+        this.target.copy(controls.target_pointer)
+        this.mesh.worldToLocal(this.target)
+
+        if (contains(this.rect, this.target)) {
             for (const _object of this.objects) {
                 const {object, target} = _object.raycast(controls, type)
                 if (object) {
@@ -596,6 +629,9 @@ class MvCamera {
         // const intersects = []
         // this.mesh.raycast(raycaster, intersects);
         // if (intersects.length > 0) {
+        //     this.target.copy(controls.target_pointer)
+        //     this.mesh.worldToLocal(this.target)
+        //     console.log(controls.target_pointer, raycaster, intersects[0], this.target)
         //     for (const _object of this.objects) {
         //         const {object, target} = _object.raycast(controls, type)
         //         if (object) {
@@ -629,6 +665,15 @@ class MvFrame {
 
     get_id = () => {
         return `${this.parent.get_id()}-${this.name}`
+    }
+
+    export = () => {
+        const list = []
+        for (const camera in this.cameras) {
+            list.push(this.cameras[camera].export())
+        }
+
+        return list
     }
 
     save = (forced) => {
@@ -788,6 +833,15 @@ class MvScene {
         return this.name
     }
 
+    export = () => {
+        const list = []
+        for (const frame in this.frames) {
+            list.push(...this.frames[frame].export())
+        }
+
+        return list
+    }
+
     save = (forced) => {
         let needSave = false
         for (const frame in this.frames) {
@@ -837,11 +891,21 @@ class MvProject {
             const camera = getObject(frame, replace_data(exec, data_mapper.camera))
             const target = /json/i.test(replace_data(exec, data_mapper.ext)) ? 'json' : 'image'
             camera[target] = file
+            camera['relative_path'] = exec[0]
         }
         this.scenes = {}
         for (const scene_name in scenes) {
             this.scenes[scene_name] = new MvScene(this, scene_name, scenes[scene_name])
         }
+    }
+
+    export = () => {
+        const list = []
+        for (const scene_name in this.scenes) {
+            list.push(...this.scenes[scene_name].export())
+        }
+
+        return list
     }
 
     save = (forced) => {

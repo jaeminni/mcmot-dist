@@ -19,6 +19,14 @@ function getFiles(file_path, files, ext) {
     }
 }
 
+ipcMain.on('open-export', (event) => {
+    dialog.showOpenDialog({properties: ['openDirectory']}).then(arg => {
+        if (!arg.canceled) {
+            event.reply('open-export', arg.filePaths[0]);
+        }
+    })
+});
+
 ipcMain.on('open-directory', (event) => {
     dialog.showOpenDialog({properties: ['openDirectory']}).then(arg => {
         if (!arg.canceled) {

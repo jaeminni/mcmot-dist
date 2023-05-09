@@ -11,5 +11,36 @@
   "scene": "{1}-{2}",
   "frame": "{7}",
   "camera": "{3}_{4}_{5}_{6}",
-  "ext": "{8}"
+  "ext": "{8}",
+  "editable": true,
+  "new_object": {
+    "geometry": [
+      [
+        384,
+        43
+      ],
+      [
+        483,
+        43
+      ],
+      [
+        483,
+        74
+      ],
+      [
+        384,
+        74
+      ]
+    ],
+    "objectID": null,
+    "box": "Horizontal",
+    "attribute": "Primary",
+    "blobs": [
+      {
+        "class": "Circle",
+        "status": "Green"
+      }
+    ],
+    "deleted": false
+  }
 }

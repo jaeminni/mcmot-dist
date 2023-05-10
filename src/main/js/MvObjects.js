@@ -266,18 +266,19 @@ class MvObject {
     compute_rect = () => {
         this.rect = [[100000, 100000], [-100000, -100000]]
 
+        console.log(this.faces)
         for (const p of this.faces) {
             this.rect = merge(this.rect, [p, p])
         }
     }
 
     create_mesh = (clip, gl_container, web_container) => {
-        if (this.properties.deleted) {
-            return
-        }
-
         if (data_mapper.editable) {
             this.compute_rect()
+        }
+
+        if (this.properties.deleted) {
+            return
         }
 
         const shapes = []
@@ -297,8 +298,8 @@ class MvObject {
         let label_point
 
         this.mv_mesh = null
-        const is_box = this.is_box(all_points)
-        if (data_mapper.editable && is_box) {
+        // const is_box = this.is_box(all_points)
+        if (data_mapper.editable && !MvOptions.useClip) {
             const object = {
                 x: all_points[0].x,
                 y: all_points[0].y,

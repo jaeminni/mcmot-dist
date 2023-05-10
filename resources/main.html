@@ -209,13 +209,17 @@
                 <button class="btn btn-default" onclick="request_save_project();">
                     <span class="icon icon-floppy"></span>
                 </button>
-                <select class="select-mapper" onchange="change_mapper()">
-                    <option value="mapper/data-mapper-mcmot.json">mcmot-master</option>
-                    <option value="mapper/data-mapper-tld.json">mcmot-tld</option>
-                    <option value="mapper/data-mapper-tld(VR).json">mcmot-tld(VR)</option>
-                </select>
             </div>
-        </div>
+            <div class="btn-group">
+                <button class="btn btn-default" onclick="request_export_project();">
+                    <span class="icon icon-logout"></span>
+                </button>
+            </div>
+            <select class="select-mapper" onchange="change_mapper()">
+                <option value="mapper/data-mapper-mcmot.json">mcmot-master</option>
+                <option value="mapper/data-mapper-tld.json">mcmot-tld</option>
+                <option value="mapper/data-mapper-tld(VR).json">mcmot-tld(VR)</option>
+            </select></div>
     </header>
     <div class="window-content" tabindex="0">
         <div class="pane-group">
@@ -325,16 +329,49 @@
 
     const {ipcRenderer} = require('electron');
     ipcRenderer.on('open-directory', response_open_project);
+    ipcRenderer.on('open-export', response_export_project);
 
     function request_open_project() {
         ipcRenderer.send('open-directory');
     }
 
     function request_save_project(forced) {
-        if(application.save(forced)) {
-            setTimeout(() => {alert("Saved")}, 1000)
+        if (application.save(forced)) {
+            setTimeout(() => {
+                alert("Saved")
+            }, 1000)
         }
     }
+
+    const fs = require('fs')
+    const path = require('path')
+
+    function export_content(root, data) {
+        const full_path = path.join(root, data.relative_path)
+        const dir = path.dirname(full_path)
+        const content = JSON.stringify(data.content, null, 4)
+
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, {recursive: true})
+        }
+
+        fs.writeFileSync(full_path, content)
+    }
+
+    function response_export_project(_, root) {
+        const list = application.export()
+
+        if (!list) {
+            return
+        }
+
+        list.forEach(data => export_content(root, data))
+    }
+
+    function request_export_project() {
+        application.project && ipcRenderer.send('open-export');
+    }
+
 
     document.addEventListener('save-camera', event => {
         ipcRenderer.send('save-camera', event.detail);
@@ -371,7 +408,7 @@
         fetch(value).then(r => r.text()).then(t => {
             data_mapper = JSON.parse(t);
             MvOptions.id_name = data_mapper['key_id']
-            data_mapper.re =  RegExp.prototype.constructor.apply(null, data_mapper.re)
+            data_mapper.re = RegExp.prototype.constructor.apply(null, data_mapper.re)
         });
     }
 
@@ -382,6 +419,7 @@
             select_mapper.dispatchEvent(new Event('change'))
         })
     }
+
     select_init()
 </script>
 

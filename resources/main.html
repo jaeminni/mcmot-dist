@@ -17,10 +17,54 @@
             position: relative;
         }
 
-        #main {
+        #main, .full-screen {
             position: absolute;
             width: 100%;
             height: 100%;
+        }
+
+        .progress-pane {
+            z-index: 1000;
+            opacity: 0.5;
+            background-color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-pane > div {
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            flex-direction: column;
+        }
+
+        .progress-label {
+            display: flex;
+            align-items: center;
+        }
+
+        .progress-label label {
+            margin-right: 10px;
+        }
+
+        .progress-label progress {
+            appearance: none;
+        }
+
+        .progress-label progress::-webkit-progress-bar {
+            background: #f0f0f0;
+            border-radius: 10px;
+            box-shadow: inset 3px 3px 10px #ccc;
+        }
+
+        .progress-label progress::-webkit-progress-value {
+            border-radius: 10px;
+            background: #1D976C;
+            background: -webkit-linear-gradient(to right, #93F9B9, #1D976C);
+            background: linear-gradient(to right, #93F9B9, #1D976C);
         }
 
         .no-scroll {
@@ -195,7 +239,6 @@
         }
 
     </style>
-
 </head>
 
 <body>
@@ -237,6 +280,17 @@
     </div>
     <footer class="toolbar toolbar-footer">
     </footer>
+</div>
+<div class="full-screen progress-pane no-scroll no-show">
+    <div>
+        <div class="progress-label">
+            <label>Export progress:</label>
+            <progress value="0" max="1000"></progress>
+        </div>
+        <div class="progress-status">
+            test
+        </div>
+    </div>
 </div>
 
 <script>
@@ -298,6 +352,46 @@
 </script>
 
 <script>
+    async function test(a) {
+        let {default: Test, hi, bye} = await import(a)
+        new Test().print()
+    }
+</script>
+
+<script>
+    const progress_pane = document.querySelector('.progress-pane')
+    progress_pane.show = () => {
+        progress_pane.classList.remove('no-show')
+    }
+    progress_pane.hide = () => {
+        progress_pane.classList.add('no-show')
+    }
+    progress_pane.init = (max) => {
+        const progress = progress_pane.querySelector('progress')
+        progress.value = 0
+        progress.max = max
+
+        const progress_status = progress_pane.querySelector('.progress-status')
+        progress_status.innerHTML = ''
+        progress_status.textContent = `0 / ${progress.max}`
+    }
+    progress_pane.value = (value) => {
+        const progress = progress_pane.querySelector('progress')
+        progress.value = value
+
+        const progress_status = progress_pane.querySelector('.progress-status')
+
+        if (value === progress.max) {
+            progress_status.textContent = ''
+            const button = document.createElement('button')
+            button.textContent = 'Done'
+            button.onclick = progress_pane.hide
+            progress_status.appendChild(button)
+        } else {
+            progress_status.textContent = `${value} / ${progress.max}`
+        }
+    }
+
     const application = new MvApplication()
 
     window.onresize = () => {
@@ -365,7 +459,20 @@
             return
         }
 
-        list.forEach(data => export_content(root, data))
+        const max = list.length
+        progress_pane.init(max)
+        progress_pane.show()
+
+        const export_func = async function () {
+            for (let i = 0; i < max; ++i) {
+                setTimeout(() => {
+                    export_content(root, list[i])
+                    progress_pane.value(i + 1)
+                })
+            }
+        }
+        export_func()
+        // list.forEach(data => export_content(root, data))
     }
 
     function request_export_project() {
@@ -421,6 +528,16 @@
     }
 
     select_init()
+    //
+    //
+    // let a = `
+    // async function test(path) {
+    //     const {Test, hi, bye}  = await import(path)
+    //     console.log(Test, hi, bye)
+    //     new Test().print()
+    // }
+    // `
+    // eval(a)
 </script>
 
 </body>

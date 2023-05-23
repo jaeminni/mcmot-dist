@@ -153,9 +153,9 @@ class MvApplication extends MvController {
         this.controllers.forEach(controller => controller.update())
     }
 
-    save = (forced) => {
+    save = (forced, camera_list) => {
         if (this.project) {
-            return this.project.save(forced)
+            return this.project.save(forced, camera_list)
         }
     }
 

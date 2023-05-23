@@ -515,7 +515,12 @@ class MvCamera {
         }
     }
 
-    internal_save() {
+    internal_save(camera_list) {
+        if (camera_list) {
+            camera_list.push(this)
+            return
+        }
+
         const file = {}
         file['filename'] = this.filename
         const key_objects = data_mapper['key_objects']
@@ -530,10 +535,10 @@ class MvCamera {
         }));
     }
 
-    save = (forced) => {
+    save = (forced, camera_list) => {
         let needSave = false
         if (forced) {
-            this.internal_save()
+            this.internal_save(camera_list)
             needSave = true
         } else {
             for (const object of this.objects) {
@@ -544,7 +549,7 @@ class MvCamera {
             }
 
             if (needSave) {
-                this.internal_save()
+                this.internal_save(camera_list)
             }
         }
 
@@ -677,10 +682,10 @@ class MvFrame {
         return list
     }
 
-    save = (forced) => {
+    save = (forced, camera_list) => {
         let needSave = false
         for (const camera in this.cameras) {
-            needSave |= this.cameras[camera].save(forced)
+            needSave |= this.cameras[camera].save(forced, camera_list)
         }
         return needSave
     }
@@ -843,10 +848,10 @@ class MvScene {
         return list
     }
 
-    save = (forced) => {
+    save = (forced, camera_list) => {
         let needSave = false
         for (const frame in this.frames) {
-            needSave |= this.frames[frame].save(forced)
+            needSave |= this.frames[frame].save(forced, camera_list)
         }
         return needSave
     }
@@ -909,10 +914,10 @@ class MvProject {
         return list
     }
 
-    save = (forced) => {
+    save = (forced, camera_list) => {
         let needSave = false
         for (const scene_name in this.scenes) {
-            needSave |= this.scenes[scene_name].save(forced)
+            needSave |= this.scenes[scene_name].save(forced, camera_list)
         }
         return needSave
     }

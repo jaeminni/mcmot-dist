@@ -430,26 +430,48 @@
     }
 
     function request_save_project(forced) {
-        if (application.save(forced)) {
-            setTimeout(() => {
-                alert("Saved")
-            }, 1000)
+        const camera_list = []
+        if (application.save(forced, camera_list)) {
+            const max = camera_list.length
+            if(!max) {
+                return
+            }
+            progress_pane.init(max)
+            progress_pane.show()
+
+            const export_func = async function () {
+                for (let i = 0; i < max; ++i) {
+                    const camera = camera_list[i]
+                    setTimeout(() => {
+                        const file = {}
+                        file['filename'] = camera.filename
+                        const key_objects = data_mapper['key_objects']
+                        file[key_objects] = camera.objects.map(object => object.toObject())
+
+                        const full_path = camera.json_path
+                        const content = JSON.stringify(file, null, 4)
+
+                        fs.writeFileSync(full_path, content)
+                        progress_pane.value(i + 1)
+                    })
+                }
+            }
+            export_func()
         }
     }
 
     const fs = require('fs')
     const path = require('path')
 
-    function export_content(root, data) {
-        const full_path = path.join(root, data.relative_path)
+    function export_content(full_path, content) {
         const dir = path.dirname(full_path)
-        const content = JSON.stringify(data.content, null, 4)
+        const _content = JSON.stringify(content, null, 4)
 
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, {recursive: true})
         }
 
-        fs.writeFileSync(full_path, content)
+        fs.writeFileSync(full_path, _content)
     }
 
     function response_export_project(_, root) {
@@ -466,7 +488,9 @@
         const export_func = async function () {
             for (let i = 0; i < max; ++i) {
                 setTimeout(() => {
-                    export_content(root, list[i])
+                    const data = list[i]
+                    const full_path = path.join(root, data.relative_path)
+                    export_content(full_path, data.content)
                     progress_pane.value(i + 1)
                 })
             }

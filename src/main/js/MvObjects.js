@@ -448,7 +448,7 @@ class MvCamera {
         ++MvCamera.json_count
         this.index = 0;
 
-        this.read_object()
+        // this.read_object()
 
         this.layout = MvOptions.layout[name] || (() => {
             return [0, 0]
@@ -456,22 +456,17 @@ class MvCamera {
     }
 
     read_object = () => {
-        fetch(this.json_path).then(res => res.json()).then(data => {
+        if(exists(this.json_path)) {
+            const data = read_json(this.json_path)
             this.filename = data['filename']
             this.prev = null
             for (const object of data[data_mapper['key_objects']]) {
                 this.objects.push(this.prev = new MvObject(this, object, this.prev, ++this.index))
             }
             this.objects.length > 0 && (this.first_object = this.objects[0])
-        }).catch(e => {
+        } else {
             this.json_error = true
-        }).finally(() => {
-            if (--MvCamera.json_count === 0) {
-                document.dispatchEvent(new CustomEvent('properties-init', {
-                    cancelable: true
-                }));
-            }
-        })
+        }
     }
 
     update_rect = (rect) => {
@@ -674,6 +669,13 @@ class MvFrame {
         }
     }
 
+    get_cameras = (list = []) => {
+        for(const camera_name in this.cameras) {
+            list.push(this.cameras[camera_name])
+        }
+        return  list
+    }
+
     get_id = () => {
         return `${this.parent.get_id()}-${this.name}`
     }
@@ -840,6 +842,13 @@ class MvScene {
         }
     }
 
+    get_cameras = (list = []) => {
+        for (const frame_name in this.frames) {
+            this.frames[frame_name].get_cameras(list)
+        }
+        return  list
+    }
+
     get_id = () => {
         return this.name
     }
@@ -905,9 +914,17 @@ class MvProject {
             camera['relative_path'] = exec[0]
         }
         this.scenes = {}
+
         for (const scene_name in scenes) {
             this.scenes[scene_name] = new MvScene(this, scene_name, scenes[scene_name])
         }
+    }
+
+    get_cameras = (list = []) => {
+        for (const scene_name in this.scenes) {
+            this.scenes[scene_name].get_cameras(list)
+        }
+        return list
     }
 
     export = () => {

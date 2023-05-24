@@ -127,10 +127,22 @@ class MvObject {
         return `${this.parent.get_id()}-${this.index}`
     }
 
-    toObject = (update = true) => {
+    clip = (clip, face) => {
+        const inter = martinez.intersection(clip, [[[...face, face[0]]]])
+
+        if (!inter || inter.length === 0) {
+            return
+        }
+        return inter[0][0]
+    }
+    toObject = (update = true, clip) => {
         const object = {}
 
-        object['geometry'] = this.faces
+        if (clip) {
+            object['geometry'] = this.clip(clip, this.faces).slice(0, 4)
+        } else {
+            object['geometry'] = this.faces
+        }
         // const mv_id = this.get_id()
         // const pre_data = MvObject.pre_data[mv_id]
         // if (pre_data) {
@@ -456,7 +468,7 @@ class MvCamera {
     }
 
     read_object = () => {
-        if(exists(this.json_path)) {
+        if (exists(this.json_path)) {
             const data = read_json(this.json_path)
             this.filename = data['filename']
             this.prev = null
@@ -499,8 +511,13 @@ class MvCamera {
         const key_objects = data_mapper['key_objects']
         content[key_objects] = []
 
+        let clip
+        if (data_mapper.export && data_mapper.export.useClip) {
+            clip = this.clip
+        }
+
         for (const object of this.objects) {
-            const o = object.toObject(false)
+            const o = object.toObject(false, clip)
             const deleted = o.deleted
             delete o.deleted
 
@@ -584,11 +601,11 @@ class MvCamera {
             this.mesh.translateY(offset[1])
             gl_container.add(this.mesh)
 
-            const clip = [[[0, 0], [width, 0], [width, height], [0, height], [0, 0]]]
+            this.clip = [[[0, 0], [width, 0], [width, height], [0, height], [0, 0]]]
 
             this.rect = [[0, 0], [width, height]]
             this.objects.forEach(object => {
-                object.create_mesh(clip, this.mesh, web_container)
+                object.create_mesh(this.clip, this.mesh, web_container)
                 if (data_mapper.editable) {
                     this.rect = merge(this.rect, object.rect)
                 }
@@ -670,10 +687,10 @@ class MvFrame {
     }
 
     get_cameras = (list = []) => {
-        for(const camera_name in this.cameras) {
+        for (const camera_name in this.cameras) {
             list.push(this.cameras[camera_name])
         }
-        return  list
+        return list
     }
 
     get_id = () => {
@@ -846,7 +863,7 @@ class MvScene {
         for (const frame_name in this.frames) {
             this.frames[frame_name].get_cameras(list)
         }
-        return  list
+        return list
     }
 
     get_id = () => {

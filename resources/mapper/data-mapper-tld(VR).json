@@ -13,6 +13,9 @@
   "camera": "{3}_{4}_{5}_{6}",
   "ext": "{8}",
   "editable": true,
+  "export": {
+    "useClip": true
+  },
   "new_object": {
     "geometry": [
       [

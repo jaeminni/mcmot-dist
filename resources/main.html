@@ -25,8 +25,7 @@
 
         .progress-pane {
             z-index: 1000;
-            opacity: 0.5;
-            background-color: black;
+            background-color: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -433,7 +432,7 @@
         const camera_list = []
         if (application.save(forced, camera_list)) {
             const max = camera_list.length
-            if(!max) {
+            if (!max) {
                 return
             }
             progress_pane.init(max)
@@ -460,7 +459,8 @@
         }
     }
 
-    const fs = require('fs')
+    const fs = require('graceful-fs')
+    // const fs = require('fs')
     const path = require('path')
 
     function export_content(full_path, content) {
@@ -526,32 +526,64 @@
 
     const select_mapper = document.querySelector('.select-mapper')
     let data_mapper;
+    const data_mapper_path = 'data/data-mapper.json'
+
     const change_mapper = () => {
         const value = select_mapper.value
-        const fs = require('fs')
-
-        const content = {
-            "select-mapper-value": value
+        let path
+        if(value) {
+            path = get_full_path(select_mapper.value)
+            const content = {
+                "select-mapper-value": value
+            }
+            write_json(get_full_path(data_mapper_path), content, 4)
         }
 
-        fs.writeFileSync(__dirname + '/data/data-mapper.json', JSON.stringify(content))
-
-        fetch(value).then(r => r.text()).then(t => {
-            data_mapper = JSON.parse(t);
+        if(path && exists(path)) {
+            data_mapper = read_json(path);
             MvOptions.id_name = data_mapper['key_id']
             data_mapper.re = RegExp.prototype.constructor.apply(null, data_mapper.re)
-        });
+        }
     }
 
     function select_init() {
-        fetch('data/data-mapper.json').then(r => r.json()).then(json => {
+        const path = get_full_path(data_mapper_path)
+        if (exists(path)) {
+            const json = read_json(path)
             select_mapper.value = json['select-mapper-value']
-        }).finally(() => {
-            select_mapper.dispatchEvent(new Event('change'))
-        })
+        }
+        select_mapper.dispatchEvent(new Event('change'))
     }
 
     select_init()
+
+    function get_full_path(_path) {
+        if(_path[0] === '/') {
+            _path = _path.substring(1)
+        }
+        return path.join(__dirname, _path)
+    }
+
+    function exists(path) {
+        return fs.existsSync(path)
+    }
+
+    function write_json(path, json, space) {
+        write_file(path, JSON.stringify(json, null, space))
+    }
+
+    function write_file(path, content) {
+        fs.writeFileSync(path, content)
+    }
+
+    function read_json(path) {
+        return JSON.parse(read_file(path))
+    }
+
+    function read_file(path) {
+        return fs.readFileSync(path)
+    }
+
     //
     //
     // let a = `

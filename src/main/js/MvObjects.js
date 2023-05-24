@@ -447,6 +447,15 @@ class MvCamera {
         this.json_error = false
         ++MvCamera.json_count
         this.index = 0;
+
+        this.read_object()
+
+        this.layout = MvOptions.layout[name] || (() => {
+            return [0, 0]
+        })
+    }
+
+    read_object = () => {
         fetch(this.json_path).then(res => res.json()).then(data => {
             this.filename = data['filename']
             this.prev = null
@@ -462,10 +471,6 @@ class MvCamera {
                     cancelable: true
                 }));
             }
-        })
-
-        this.layout = MvOptions.layout[name] || (() => {
-            return [0, 0]
         })
     }
 

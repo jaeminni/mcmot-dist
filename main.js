@@ -38,7 +38,6 @@ ipcMain.on('open-directory', (event) => {
 });
 
 ipcMain.on('save-camera', (event, arg) => {
-    console.log(arg)
     const path = arg.path
     const json = arg.json
 

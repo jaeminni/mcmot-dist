@@ -116,7 +116,6 @@ class MvBox extends MvMesh {
 
         if (intersects.length > 0) {
             const index = intersects[0].index
-            console.log(index)
             const x = this.geometry.attributes.position.getX(index)
             const y = this.geometry.attributes.position.getY(index)
             const z = this.geometry.attributes.position.getZ(index)
@@ -124,9 +123,7 @@ class MvBox extends MvMesh {
             // const v2 = this.group.localToWorld(v)
 
             this.origin.copy(v)
-            console.log(this.origin)
             this.array.set(this.geometry.attributes.position.array)
-            console.log(this.array)
 
             return {object: this, index: intersects[0].index}
         }
@@ -134,7 +131,6 @@ class MvBox extends MvMesh {
         intersects = raycaster.intersectObject(this.main)
 
         if (intersects.length > 0) {
-            console.log('select_mesh', intersects[0])
             const point = this.group.position
             this.origin.copy(point)
             return {object: this}
@@ -205,21 +201,16 @@ class MvBox extends MvMesh {
                     break
             }
 
-            console.log(index, index2, this.array)
             const x1 = this.array[0 + 3 * index2]
             const y1 = this.array[1 + 3 * index2]
 
-            console.log('coord', x1, y1)
             const x2 = this.temp.x
             const y2 = this.temp.y
-            console.log('coord', x2, y2)
 
             const minX = Math.min(x1, x2)
             const minY = Math.min(y1, y2)
             const maxX = Math.max(x1, x2)
             const maxY = Math.max(y1, y2)
-
-            console.log('coord', minX, minY, maxX, maxY)
 
             this.geometry.attributes.position.array[0] = minX
             this.geometry.attributes.position.array[1] = minY
@@ -232,8 +223,6 @@ class MvBox extends MvMesh {
 
             this.geometry.attributes.position.array[9] = maxX
             this.geometry.attributes.position.array[10] = maxY
-
-            console.log(this.geometry.attributes.position.array)
 
             // this.geometry.attributes.position.setXYZ(index, this.temp.x, this.temp.y, this.temp.z)
             this.geometry.attributes.position.needsUpdate = true

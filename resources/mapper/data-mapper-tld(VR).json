@@ -14,7 +14,9 @@
   "ext": "{8}",
   "editable": true,
   "export": {
-    "useClip": true
+    "useClip": true,
+    "width": 1280,
+    "height": 720
   },
   "new_object": {
     "geometry": [

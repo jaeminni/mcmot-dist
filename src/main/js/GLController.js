@@ -80,7 +80,6 @@ export default class GLController extends MvController {
                     const {camera, object, target} = this.frame.cameras[_camera].raycast(controls, 'select')
                     if(target) {
                         selected = target
-                        console.log('target', target)
                         break
                     }
                 }

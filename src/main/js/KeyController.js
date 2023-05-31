@@ -2,7 +2,6 @@ export default class KeyController {
     constructor(application, component, keyMap) {
         this.application = application
         component.addEventListener("keydown", (event) => {
-            console.log(event)
             if (event.getModifierState("Accel")) {
                 switch (event.code) {
                     case 'KeyS': {

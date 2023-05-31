@@ -133,13 +133,22 @@ class MvObject {
         if (!inter || inter.length === 0) {
             return
         }
+
+        for(const point of inter[0][0]) {
+            point[0] = Math.round(point[0] * 1000) / 1000
+            point[1] = Math.round(point[1] * 1000) / 1000
+        }
+
         return inter[0][0]
     }
     toObject = (update = true, clip) => {
         const object = {}
 
         if (clip) {
-            object['geometry'] = this.clip(clip, this.faces).slice(0, 4)
+            const geometry = this.clip(clip, this.faces)
+            if(geometry) {
+                object['geometry'] = geometry.slice(0, -1)
+            }
         } else {
             object['geometry'] = this.faces
         }
@@ -278,7 +287,6 @@ class MvObject {
     compute_rect = () => {
         this.rect = [[100000, 100000], [-100000, -100000]]
 
-        console.log(this.faces)
         for (const p of this.faces) {
             this.rect = merge(this.rect, [p, p])
         }
@@ -412,7 +420,6 @@ class MvObject {
 
     select = () => {
         if (this.mesh) {
-            console.log(this)
             window.object = this;
             this.mesh.material.color.set(MvOptions.select)
         }
@@ -486,10 +493,8 @@ class MvCamera {
         this.objects.forEach(object => {
             this.rect = merge(this.rect, object.rect)
         })
-        console.log('update_rect', this.rect)
     }
     new_object = (object) => {
-        console.log('new_object', object)
         let data = data_mapper.new_object
         if (object) {
             data = JSON.parse(JSON.stringify(object.toObject(false)))
@@ -513,15 +518,18 @@ class MvCamera {
 
         let clip
         if (data_mapper.export && data_mapper.export.useClip) {
+            if (!this.clip) {
+                const width = data_mapper.export.width
+                const height = data_mapper.export.height
+                this.clip = [[[0, 0], [width, 0], [width, height], [0, height], [0, 0]]]
+            }
             clip = this.clip
         }
 
         for (const object of this.objects) {
-            const o = object.toObject(false, clip)
-            const deleted = o.deleted
-            delete o.deleted
-
-            if (!deleted) {
+            if (!object.properties.deleted) {
+                const o = object.toObject(false, clip)
+                delete o.deleted
                 content[key_objects].push(o)
             }
         }

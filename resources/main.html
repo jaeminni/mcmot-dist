@@ -256,12 +256,19 @@
                 <button class="btn btn-default" onclick="request_export_project();">
                     <span class="icon icon-logout"></span>
                 </button>
+                <button class="btn btn-default" onclick="request_export_project();">
+                    <span class="icon icon-logout"></span>
+                </button>
             </div>
             <select class="select-mapper" onchange="change_mapper()">
                 <option value="mapper/data-mapper-mcmot.json">mcmot-master</option>
                 <option value="mapper/data-mapper-tld.json">mcmot-tld</option>
                 <option value="mapper/data-mapper-tld(VR).json">mcmot-tld(VR)</option>
-            </select></div>
+            </select>
+            <div class="btn-group">
+                <input type="color" value="#ffffff" oninput="set_gl_background(this.value)">
+            </div>
+        </div>
     </header>
     <div class="window-content" tabindex="0">
         <div class="pane-group">
@@ -297,7 +304,7 @@
         let _d, value, clicked, reserved;
 
         function mouseDown(event) {
-            window.addEventListener('mousemove', mouseMove);
+            window.addEventListener("mousemove', mouseMove);
             window.addEventListener('mouseup', mouseUp);
             clicked = true;
             if (!!reserved) {
@@ -358,6 +365,10 @@
 </script>
 
 <script>
+    set_gl_background = (color) => {
+        gl_controller.set_background(new THREE.Color(color))
+    }
+
     const progress_pane = document.querySelector('.progress-pane')
     progress_pane.show = () => {
         progress_pane.classList.remove('no-show')
@@ -389,7 +400,7 @@
         const progress_status = progress_pane.querySelector('.progress-status')
 
         if (value === progress.max) {
-            if(progress_pane.auto_done) {
+            if (progress_pane.auto_done) {
                 progress_pane.done()
             } else {
                 progress_status.textContent = ''
@@ -500,9 +511,9 @@
 
         const key_objects = data_mapper['key_objects']
         const objects = content[key_objects]
-        for(const obj of objects) {
-            for(const point of obj.geometry) {
-                if(point[0] < 0 || point[0] > 1280 || point[1] < 0 || point[1] > 720) {
+        for (const obj of objects) {
+            for (const point of obj.geometry) {
+                if (point[0] < 0 || point[0] > 1280 || point[1] < 0 || point[1] > 720) {
                     console.log('export', full_path, obj)
                     break
                 }

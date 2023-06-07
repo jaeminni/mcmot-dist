@@ -17,7 +17,8 @@ export default class GLController extends MvController {
 
         const gl_scene = new THREE.Scene()
         this.gl_scene = gl_scene
-        gl_scene.background = new THREE.Color('#278')
+        // gl_scene.background = new THREE.Color('#278')
+        gl_scene.background = new THREE.Color('#ffffff')
         gl_scene.add(new THREE.AmbientLight(0xffffff))
         this.gl_group = new THREE.Group()
         gl_scene.add(this.gl_group)
@@ -32,6 +33,14 @@ export default class GLController extends MvController {
         this.update()
     }
 
+    set_background = (color) => {
+        this.gl_scene.background = color
+        this.update()
+    }
+
+    get_background = () => {
+        return this.gl_scene.background
+    }
 
     moved = false
     mouse_move = (control, event) => {

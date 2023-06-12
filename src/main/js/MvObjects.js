@@ -134,7 +134,7 @@ class MvObject {
             return
         }
 
-        for(const point of inter[0][0]) {
+        for (const point of inter[0][0]) {
             point[0] = Math.round(point[0] * 1000) / 1000
             point[1] = Math.round(point[1] * 1000) / 1000
         }
@@ -142,11 +142,15 @@ class MvObject {
         return inter[0][0]
     }
     toObject = (update = true, clip) => {
+        if (this.properties.deleted) {
+            return null
+        }
+
         const object = {}
 
         if (clip) {
             const geometry = this.clip(clip, this.faces)
-            if(geometry) {
+            if (geometry) {
                 object['geometry'] = geometry.slice(0, -1)
             }
         } else {
@@ -192,7 +196,7 @@ class MvObject {
     }
 
     isPropertyChanged = () => {
-        if (this.moved) {
+        if (this.moved || this.properties.deleted) {
             return true
         }
 
@@ -708,7 +712,7 @@ class MvFrame {
     export = () => {
         const list = []
         for (const camera in this.cameras) {
-            list.push(this.cameras[camera].export())
+            list.push(this.cameras[camera])
         }
 
         return list
@@ -810,6 +814,10 @@ class MvFrame {
                 for (let j = i; j < length; ++j) {
                     const dst_camera_object = this.cameras[camera_keys[j]]
                     for (const src_object of src_camera_object.objects) {
+                        if (src_object.properties.deleted) {
+                            continue
+                        }
+
                         const src_id = src_object.properties[MvOptions.id_name]
                         if (!src_id) {
                             set_error(src_camera_object, null, src_object, null, MvOptions.id_name)
@@ -822,6 +830,10 @@ class MvFrame {
                             }
 
                             for (const dst_object of dst_camera_object.objects) {
+                                if (dst_object.properties.deleted) {
+                                    continue
+                                }
+
                                 const dst_id = dst_object.properties[MvOptions.id_name]
                                 if (!dst_id) {
                                     set_error(null, dst_camera_object, null, dst_object, MvOptions.id_name)

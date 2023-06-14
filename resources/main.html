@@ -301,7 +301,7 @@
         let _d, value, clicked, reserved;
 
         function mouseDown(event) {
-            window.addEventListener("mousemove', mouseMove);
+            window.addEventListener('mousemove', mouseMove);
             window.addEventListener('mouseup', mouseUp);
             clicked = true;
             if (!!reserved) {
@@ -478,29 +478,40 @@
             progress_pane.init(max)
             progress_pane.show()
 
-            const export_func = async function () {
-                for (let i = 0; i < max; ++i) {
-                    const camera = camera_list[i]
-                    setTimeout(() => {
-                        const file = {}
-                        file['filename'] = camera.filename
-                        const key_objects = data_mapper['key_objects']
-                        file[key_objects] = camera.objects.map(object => object.toObject())
+            let index = 0
 
-                        const full_path = camera.json_path
-                        const content = JSON.stringify(file, null, 4)
+            const save_func = async function () {
+                const camera = camera_list[index++]
 
-                        fs.writeFileSync(full_path, content)
-                        progress_pane.value(i + 1)
-                    })
+                try {
+                    const file = {}
+                    file['filename'] = camera.filename
+                    const key_objects = data_mapper['key_objects']
+                    file[key_objects] = camera.objects.map(object => object.toObject())
+
+                    const full_path = camera.json_path
+                    const content = JSON.stringify(file, null, 4)
+
+                    fs.writeFileSync(full_path, content)
+                    progress_pane.value(index)
+                    if (index < camera_list.length) {
+                        setTimeout(save_func)
+                    } else {
+                        application.reselect_camera()
+                    }
+                } catch (e) {
+                    progress_pane.hide()
+                    alert('see console, error!!!' + e)
+                    console.log("save error:" + camera.json_path)
+                    application.reselect_camera()
                 }
             }
-            export_func()
+            setTimeout(save_func)
         }
     }
 
-    const fs = require('graceful-fs')
-    // const fs = require('fs')
+    // const fs = require('graceful-fs')
+    const fs = require('fs')
     const path = require('path')
 
     function export_content(full_path, content) {
@@ -537,17 +548,27 @@
         progress_pane.init(max)
         progress_pane.show()
 
+        let index = 0
+
         const export_func = async function () {
-            for (let i = 0; i < max; ++i) {
-                setTimeout(() => {
-                    const data = list[i]
-                    const full_path = path.join(root, data.relative_path)
-                    export_content(full_path, data.content)
-                    progress_pane.value(i + 1)
-                })
+            const camera = list[index++]
+
+            try {
+                const data = camera.export()
+                const full_path = path.join(root, data.relative_path)
+                export_content(full_path, data.content)
+                progress_pane.value(index)
+
+                if (index < max) {
+                    setTimeout(export_func)
+                }
+            } catch (e) {
+                progress_pane.hide()
+                alert('see console, error!!!' + e)
+                console.log("export error:" + camera.json_path)
             }
         }
-        export_func()
+        setTimeout(export_func)
         // list.forEach(data => export_content(root, data))
     }
 

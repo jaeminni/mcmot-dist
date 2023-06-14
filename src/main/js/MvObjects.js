@@ -196,7 +196,7 @@ class MvObject {
     }
 
     isPropertyChanged = () => {
-        if (this.moved || this.properties.deleted) {
+        if (this.moved || this.properties.deleted || this.new) {
             return true
         }
 
@@ -499,15 +499,19 @@ class MvCamera {
         })
     }
     new_object = (object) => {
-        let data = data_mapper.new_object
+        let data
         if (object) {
             data = JSON.parse(JSON.stringify(object.toObject(false)))
             for (const p of data.geometry) {
                 p[0] += 20
                 p[1] += 20
             }
+        } else {
+            data = JSON.parse(JSON.stringify(data_mapper.new_object))
         }
+
         this.objects.push(this.prev = new MvObject(this, data, this.prev, ++this.index))
+        this.prev.new = true
     }
 
     get_id = () => {
@@ -546,6 +550,8 @@ class MvCamera {
 
     internal_save(camera_list) {
         if (camera_list) {
+            this.objects = this.objects.filter(object => !object.properties.deleted)
+
             camera_list.push(this)
             return
         }
@@ -553,7 +559,7 @@ class MvCamera {
         const file = {}
         file['filename'] = this.filename
         const key_objects = data_mapper['key_objects']
-        file[key_objects] = this.objects.map(object => object.toObject())
+        file[key_objects] = this.objects.map(object => object.toObject()).filter(object => !!object)
 
         document.dispatchEvent(new CustomEvent('save-camera', {
             cancelable: true,

@@ -301,7 +301,7 @@
         let _d, value, clicked, reserved;
 
         function mouseDown(event) {
-            window.addEventListener("mousemove', mouseMove);
+            window.addEventListener('mousemove', mouseMove);
             window.addEventListener('mouseup', mouseUp);
             clicked = true;
             if (!!reserved) {
@@ -487,9 +487,8 @@
                     const file = {}
                     file['filename'] = camera.filename
                     const key_objects = data_mapper['key_objects']
-                    let objects = camera.objects.map(object => object.toObject())
-                    objects = objects.filter(obj => !!obj)
-                    file[key_objects] = objects
+                    file[key_objects] = camera.objects.map(object => object.toObject())
+
                     const full_path = camera.json_path
                     const content = JSON.stringify(file, null, 4)
 
@@ -497,11 +496,14 @@
                     progress_pane.value(index)
                     if (index < camera_list.length) {
                         setTimeout(save_func)
+                    } else {
+                        application.reselect_camera()
                     }
                 } catch (e) {
                     progress_pane.hide()
                     alert('see console, error!!!' + e)
                     console.log("save error:" + camera.json_path)
+                    application.reselect_camera()
                 }
             }
             setTimeout(save_func)
@@ -557,7 +559,7 @@
                 export_content(full_path, data.content)
                 progress_pane.value(index)
 
-                if(index < max) {
+                if (index < max) {
                     setTimeout(export_func)
                 }
             } catch (e) {

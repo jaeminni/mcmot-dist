@@ -115,10 +115,23 @@ class MvApplication extends MvController {
 
     new_object = () => {
         if (data_mapper.editable && this.selected_camera) {
-            this.selected_camera.new_object(this.selected_object)
-            // this.deselect_frame(this.frame)
+            const camera = this.selected_camera
+
+            camera.new_object(this.selected_object)
+
             this.select_frame(this.frame)
+            this.deselect_camera(camera)
+            this.select_camera(camera)
         }
+    }
+
+    reselect_camera = () => {
+        const frame = this.frame
+        const camera = this.selected_camera
+
+        this.select_frame(frame)
+        this.deselect_camera(camera)
+        this.select_camera(camera)
     }
 
     select_camera = (camera) => {

@@ -37,14 +37,20 @@ function get_files(path, files = []) {
 }
 
 
+const path_regex = /(?<camera>camera_.*)\/(?<vid>\w+)_(?<rid>\w+)_FRAME_(?<frame>\d+).json/i
+
 function get_path_object(path) {
     const path_object = {}
 
     const length = origin_path.length + 1
     const files = get_files(path)
     files.forEach(file => {
-        const key = file.substring(length)
-        path_object[key] = file
+        const exec = path_regex.exec(file)
+        if(exec) {
+            const groups = exec.groups
+            const key = `${groups['vid']}_${groups['rid']}_${groups['camera']}_${groups['frame']}`
+            path_object[key] = file
+        }
     })
 
     return path_object

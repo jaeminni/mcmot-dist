@@ -1,4 +1,5 @@
 {
   "editable": true,
-  "frame-index-length": 3
+  "frame-index-length": 3,
+  "check-properties": false
 }

@@ -73,7 +73,7 @@ class MvObject {
         this.data = data
         this.moved = false
 
-        const track_id = data[MvOptions.id_name] || null
+        const track_id = data[MvOptions.id_name] = null
 
         data[MvOptions.id_name] = track_id
         const properties = {}
@@ -789,6 +789,10 @@ class MvFrame {
                         dst.deselect()
                     }
                 }
+            }
+
+            if(!propertiesConfig['check-properties']) {
+                return;
             }
 
             const camera_keys = Object.keys(this.cameras)

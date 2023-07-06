@@ -1,7 +1,6 @@
 import ImageGeometry from "./ImageGeometry";
 import * as THREE from "three";
 import * as martinez from 'martinez-polygon-clipping'
-import {ShapeUtils} from "three";
 import {MvBox} from "./MvMesh";
 
 function merge(rect1, rect2) {
@@ -73,7 +72,7 @@ class MvObject {
         this.data = data
         this.moved = false
 
-        const track_id = data[MvOptions.id_name] = null
+        const track_id = data[MvOptions.id_name] || null
 
         data[MvOptions.id_name] = track_id
         const properties = {}
@@ -186,6 +185,10 @@ class MvObject {
                     object[to_int] = Number(object[to_int])
                 }
             }
+        }
+
+        if (propertiesConfig['id-forced']) {
+            object[MvOptions.id_name] = propertiesConfig['id-forced-value']
         }
 
         if (update) {
@@ -791,8 +794,8 @@ class MvFrame {
                 }
             }
 
-            if(!propertiesConfig['check-properties']) {
-                return;
+            if (!propertiesConfig['check-properties']) {
+                return
             }
 
             const camera_keys = Object.keys(this.cameras)

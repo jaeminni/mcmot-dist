@@ -1,5 +1,7 @@
 {
   "editable": true,
   "frame-index-length": 3,
-  "check-properties": false
+  "check-properties": false,
+  "id-forced": true,
+  "id-forced-value": null
 }

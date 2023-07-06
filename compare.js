@@ -1,8 +1,8 @@
 const args = require('args-parser')(process.argv);
 
-let origin_path = args['origin'] || 'C:\\Users\\jaemi\\Downloads\\compare_sample_data\\1_origin'
-let manual_path = args['manual'] || 'C:\\Users\\jaemi\\Downloads\\compare_sample_data\\2_manual'
-let overlap_threshold = args['overlap'] || 0.95
+let origin_path = args['origin'] || '/Users/a10757/works/job/annotation-tool/data/1_origin'
+let manual_path = args['manual'] || '/Users/a10757/works/job/annotation-tool/data/2_manual'
+let overlap_threshold = args['overlap'] || 0.90
 
 const _fs = require('fs')
 const _path = require('path')
@@ -57,6 +57,18 @@ const result = {
         'origin': [],
         'manual': []
     },
+    'geometries': {
+        'origin': {
+            'count': 0,
+            'update': 0,
+            'delete': 0
+        },
+        'manual': {
+            'count': 0,
+            'create': 0,
+            'update': 0,
+        }
+    },
     'properties': {
         'box': {
             'Horizontal': {origin: 0, manual: 0},
@@ -91,13 +103,6 @@ const result = {
     }
 }
 
-function is_overlap(l1, r1, l2, r2) {
-    // if (l1[0] === r1[0] || l1[1] === r1[1] || r2[0] === l2[0] || l2[1] === r2[1])
-    //     return false;
-    //
-    return !(l1[0] >= r2[0] || l2[0] >= r1[0] || r1[1] <= l2[1] || r2[1] <= l1[1])
-}
-
 function area([x1, y1], [x2, y2]) {
     return (x2 - x1) * (y2 - y1)
 }
@@ -120,14 +125,14 @@ function overlap_geo(origin_geo, manual_geo) {
 }
 
 
-function add_result(object, column) {
+function add_result_properties(object, column) {
     let has_null = false
     const properties = result['properties']
     properties['box'][object['box']][column]++
     properties['attribute'][object['attribute'] ? object['attribute'] : 'null'][column]++
     for (const blob of object['blobs']) {
         const _class = blob['class'];
-        if(_class) {
+        if (_class) {
             properties['blobs']['class'][_class][column]++
         } else {
             has_null = true
@@ -137,6 +142,36 @@ function add_result(object, column) {
     }
 
     return has_null
+}
+
+function add_result_geometry(matrix, origin_len, manual_len) {
+    const geometries = result['geometries']
+    geometries['origin']['count'] += origin_len
+    geometries['manual']['count'] += manual_len
+
+    for (let i = 0; i < origin_len; ++i) {
+        let max_overlap = 0
+        for (let j = 0; j < manual_len; ++j) {
+            max_overlap = Math.max(matrix[i][j], max_overlap)
+        }
+        if (max_overlap >= overlap_threshold) {
+            geometries['origin']['update']++
+        } else {
+            geometries['origin']['delete']++
+        }
+    }
+
+    for (let j = 0; j < manual_len; ++j) {
+        let max_overlap = 0
+        for (let i = 0; i < origin_len; ++i) {
+            max_overlap = Math.max(matrix[i][j], max_overlap)
+        }
+        if (max_overlap >= overlap_threshold) {
+            geometries['manual']['update']++
+        } else {
+            geometries['manual']['create']++
+        }
+    }
 }
 
 function compare_file(origin_file, manual_file) {
@@ -164,20 +199,16 @@ function compare_file(origin_file, manual_file) {
         }
     }
 
-    for (let i = 0; i < origin_len; ++i) {
-        for (let j = 0; j < manual_len; ++j) {
-        }
-    }
-
+    add_result_geometry(matrix, origin_len, manual_len)
 
     for (let i = 0; i < origin_len; ++i) {
         const object = origin_overhead_objects[i]
-        const has_null = add_result(object, 'origin')
+        const has_null = add_result_properties(object, 'origin')
         has_null && result['class-null']['origin'].push(origin_file)
     }
     for (let i = 0; i < manual_len; ++i) {
         const object = manual_overhead_objects[i]
-        const has_null = add_result(object, 'manual')
+        const has_null = add_result_properties(object, 'manual')
         has_null && result['class-null']['manual'].push(manual_file)
     }
 
@@ -238,6 +269,18 @@ function print_result() {
     print_line('      status Blink       ', blobs['status']['Blink'])
     print_line('             Blackout    ', blobs['status']['Blackout'])
     print_line('             Unknown     ', blobs['status']['Unknown'])
+    console.log('--------------------------------------------------------------')
+
+    const geometries = result['geometries']
+    console.log('Geometry')
+    console.log('--------------------------------------------------------------')
+    console.log('origin count:', geometries['origin']['count'], `(${geometries['origin']['update'] + geometries['origin']['delete']})`)
+    console.log('origin update:', geometries['origin']['update'])
+    console.log('origin delete:', geometries['origin']['delete'])
+    console.log('--------------------------------------------------------------')
+    console.log('manual count:', geometries['manual']['count'], `(${geometries['manual']['update'] + geometries['manual']['create']})`)
+    console.log('manual update:', geometries['manual']['update'])
+    console.log('manual create:', geometries['manual']['create'])
     console.log('--------------------------------------------------------------')
 }
 
